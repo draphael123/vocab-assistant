@@ -1,9 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Word of the Day",
-  "version": "1.0.0",
-  "description": "Expand your vocabulary with a new word every day. Learn SAT/GRE level words through active practice.",
-  "permissions": ["storage"],
+  "version": "1.1.0",
+  "description": "Expand your vocabulary with a new word every day. Learn SAT/GRE level words through active practice with audio pronunciation, etymology, quizzes, and more.",
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "notifications",
+    "alarms"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -21,4 +26,3 @@
     "service_worker": "background.js"
   }
 }
-

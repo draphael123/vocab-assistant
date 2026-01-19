@@ -12,69 +12,15 @@ let stats = {
   skippedWords: [],
   favorites: [],
   lastPracticeDate: null,
-  difficulty: 2, // 1=Everyday, 2=SAT, 3=GRE, 4=Obscure
-  theme: 'light'
+  difficulty: 2,
+  theme: 'light',
+  notificationsEnabled: false,
+  isFirstTime: true,
+  spacedRepetition: [],
+  learningHistory: {},
+  enabledCategories: ['general', 'business', 'literature', 'science', 'philosophy', 'law', 'medicine', 'arts']
 };
 let quizState = { questions: [], current: 0, score: 0 };
-
-// DOM Elements
-const elements = {
-  // Main View
-  mainView: document.getElementById('mainView'),
-  todayDate: document.getElementById('todayDate'),
-  themeToggle: document.getElementById('themeToggle'),
-  settingsBtn: document.getElementById('settingsBtn'),
-  difficultyBadge: document.getElementById('difficultyBadge'),
-  currentWord: document.getElementById('currentWord'),
-  audioBtn: document.getElementById('audioBtn'),
-  partOfSpeech: document.getElementById('partOfSpeech'),
-  pronunciation: document.getElementById('pronunciation'),
-  definition: document.getElementById('definition'),
-  etymologySection: document.getElementById('etymologySection'),
-  etymology: document.getElementById('etymology'),
-  example: document.getElementById('example'),
-  synonyms: document.getElementById('synonyms'),
-  antonyms: document.getElementById('antonyms'),
-  skipBtn: document.getElementById('skipBtn'),
-  userSentence: document.getElementById('userSentence'),
-  checkBtn: document.getElementById('checkBtn'),
-  copyBtn: document.getElementById('copyBtn'),
-  feedback: document.getElementById('feedback'),
-  streakCount: document.getElementById('streakCount'),
-  wordsLearned: document.getElementById('wordsLearned'),
-  bestStreak: document.getElementById('bestStreak'),
-  quizBtn: document.getElementById('quizBtn'),
-  bankBtn: document.getElementById('bankBtn'),
-  newWordBtn: document.getElementById('newWordBtn'),
-  
-  // Quiz View
-  quizView: document.getElementById('quizView'),
-  quizBackBtn: document.getElementById('quizBackBtn'),
-  quizProgress: document.getElementById('quizProgress'),
-  quizQuestion: document.getElementById('quizQuestion'),
-  quizOptions: document.getElementById('quizOptions'),
-  quizResult: document.getElementById('quizResult'),
-  quizScore: document.getElementById('quizScore'),
-  quizMessage: document.getElementById('quizMessage'),
-  quizDoneBtn: document.getElementById('quizDoneBtn'),
-  
-  // Bank View
-  bankView: document.getElementById('bankView'),
-  bankBackBtn: document.getElementById('bankBackBtn'),
-  exportBtn: document.getElementById('exportBtn'),
-  bankList: document.getElementById('bankList'),
-  bankEmpty: document.getElementById('bankEmpty'),
-  
-  // Settings View
-  settingsView: document.getElementById('settingsView'),
-  settingsBackBtn: document.getElementById('settingsBackBtn'),
-  difficultyOptions: document.getElementById('difficultyOptions'),
-  resetBtn: document.getElementById('resetBtn'),
-  
-  // Toast
-  milestoneToast: document.getElementById('milestoneToast'),
-  milestoneText: document.getElementById('milestoneText')
-};
 
 // ============================================
 // Initialization
@@ -84,11 +30,36 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadStats();
   applyTheme(stats.theme);
   updateDate();
+  
+  // Check for lookup word from context menu
+  await checkLookupWord();
+  
+  // Check for first time user
+  if (stats.isFirstTime) {
+    showOnboarding();
+  }
+  
   await loadOrSetDailyWord();
   updateUI();
   setupEventListeners();
   setupKeyboardShortcuts();
+  checkSpacedRepetition();
+  generateCategoryToggles();
 });
+
+// ============================================
+// Onboarding
+// ============================================
+
+function showOnboarding() {
+  document.getElementById('onboarding').classList.remove('hidden');
+}
+
+function hideOnboarding() {
+  document.getElementById('onboarding').classList.add('hidden');
+  stats.isFirstTime = false;
+  saveStats();
+}
 
 // ============================================
 // Data Persistence
@@ -119,7 +90,25 @@ function getTodayString() {
   return new Date().toISOString().split('T')[0];
 }
 
+async function checkLookupWord() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['lookupWord'], (result) => {
+      if (result.lookupWord) {
+        const word = result.lookupWord.toLowerCase();
+        const found = VOCABULARY.find(w => w.word.toLowerCase() === word);
+        if (found) {
+          currentWord = found;
+          chrome.storage.local.remove(['lookupWord']);
+        }
+      }
+      resolve();
+    });
+  });
+}
+
 async function loadOrSetDailyWord() {
+  if (currentWord) return; // Already set from lookup
+  
   return new Promise((resolve) => {
     chrome.storage.local.get(['dailyWord', 'dailyWordDate'], (result) => {
       const today = getTodayString();
@@ -128,10 +117,7 @@ async function loadOrSetDailyWord() {
         currentWord = result.dailyWord;
       } else {
         setNewWord();
-        chrome.storage.local.set({ 
-          dailyWord: currentWord, 
-          dailyWordDate: today 
-        });
+        chrome.storage.local.set({ dailyWord: currentWord, dailyWordDate: today });
       }
       resolve();
     });
@@ -139,16 +125,18 @@ async function loadOrSetDailyWord() {
 }
 
 function setNewWord() {
-  // Filter by difficulty and exclude learned/skipped
   const availableWords = VOCABULARY.filter(w => 
     w.difficulty <= stats.difficulty &&
+    stats.enabledCategories.includes(w.category) &&
     !stats.learnedWords.includes(w.word.toLowerCase()) &&
     !stats.skippedWords.includes(w.word.toLowerCase())
   );
   
-  const wordPool = availableWords.length > 0 ? availableWords : VOCABULARY.filter(w => w.difficulty <= stats.difficulty);
+  const wordPool = availableWords.length > 0 ? availableWords : 
+    VOCABULARY.filter(w => w.difficulty <= stats.difficulty && stats.enabledCategories.includes(w.category));
+  
   const randomIndex = Math.floor(Math.random() * wordPool.length);
-  currentWord = wordPool[randomIndex];
+  currentWord = wordPool[randomIndex] || VOCABULARY[0];
 }
 
 async function getNewWord() {
@@ -156,15 +144,11 @@ async function getNewWord() {
   const today = getTodayString();
   
   await new Promise((resolve) => {
-    chrome.storage.local.set({ 
-      dailyWord: currentWord, 
-      dailyWordDate: today 
-    }, resolve);
+    chrome.storage.local.set({ dailyWord: currentWord, dailyWordDate: today }, resolve);
   });
   
-  // Reset input and feedback
-  elements.userSentence.value = '';
-  elements.feedback.className = 'feedback';
+  document.getElementById('userSentence').value = '';
+  document.getElementById('feedback').className = 'feedback';
   
   updateWordDisplay();
 }
@@ -183,7 +167,7 @@ async function skipWord() {
 
 function updateDate() {
   const options = { weekday: 'long', month: 'short', day: 'numeric' };
-  elements.todayDate.textContent = new Date().toLocaleDateString('en-US', options);
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', options);
 }
 
 function updateUI() {
@@ -194,59 +178,60 @@ function updateUI() {
 function updateWordDisplay() {
   if (!currentWord) return;
   
-  elements.currentWord.textContent = currentWord.word;
-  elements.partOfSpeech.textContent = currentWord.partOfSpeech;
-  elements.definition.textContent = currentWord.definition;
-  elements.example.textContent = currentWord.example;
+  document.getElementById('currentWord').textContent = currentWord.word;
+  document.getElementById('partOfSpeech').textContent = currentWord.partOfSpeech;
+  document.getElementById('definition').textContent = currentWord.definition;
+  document.getElementById('example').textContent = currentWord.example;
   
-  // Difficulty badge
+  // Badges
   const diffLabels = { 1: 'Everyday', 2: 'SAT', 3: 'GRE', 4: 'Obscure' };
-  elements.difficultyBadge.textContent = diffLabels[currentWord.difficulty] || 'SAT';
+  document.getElementById('difficultyBadge').textContent = diffLabels[currentWord.difficulty] || 'SAT';
+  document.getElementById('categoryBadge').textContent = currentWord.category || 'general';
   
   // Etymology
+  const etymSection = document.getElementById('etymologySection');
   if (currentWord.etymology) {
-    elements.etymologySection.style.display = 'flex';
-    elements.etymology.textContent = currentWord.etymology;
+    etymSection.style.display = 'flex';
+    document.getElementById('etymology').textContent = currentWord.etymology;
   } else {
-    elements.etymologySection.style.display = 'none';
+    etymSection.style.display = 'none';
   }
   
-  // Pronunciation (generate from word)
-  elements.pronunciation.textContent = generatePronunciation(currentWord.word);
+  // Pronunciation
+  document.getElementById('pronunciation').textContent = generatePronunciation(currentWord.word);
   
-  // Synonyms
-  elements.synonyms.innerHTML = '';
+  // Synonyms & Antonyms
+  const synonymsEl = document.getElementById('synonyms');
+  const antonymsEl = document.getElementById('antonyms');
+  synonymsEl.innerHTML = '';
+  antonymsEl.innerHTML = '';
+  
   (currentWord.synonyms || []).slice(0, 3).forEach(syn => {
     const span = document.createElement('span');
     span.textContent = syn;
-    elements.synonyms.appendChild(span);
+    synonymsEl.appendChild(span);
   });
   
-  // Antonyms
-  elements.antonyms.innerHTML = '';
   (currentWord.antonyms || []).slice(0, 3).forEach(ant => {
     const span = document.createElement('span');
     span.textContent = ant;
-    elements.antonyms.appendChild(span);
+    antonymsEl.appendChild(span);
   });
 }
 
 function generatePronunciation(word) {
-  // Simple phonetic approximation
   return '/' + word.toLowerCase()
     .replace(/ph/g, 'f')
     .replace(/tion/g, 'shən')
     .replace(/sion/g, 'zhən')
     .replace(/ous$/g, 'əs')
-    .replace(/ious$/g, 'ēəs')
-    .replace(/eous$/g, 'ēəs')
     + '/';
 }
 
 function updateStats() {
-  elements.streakCount.textContent = stats.currentStreak;
-  elements.wordsLearned.textContent = stats.wordsLearned;
-  elements.bestStreak.textContent = stats.bestStreak;
+  document.getElementById('streakCount').textContent = stats.currentStreak;
+  document.getElementById('wordsLearned').textContent = stats.wordsLearned;
+  document.getElementById('bestStreak').textContent = stats.bestStreak;
 }
 
 // ============================================
@@ -254,7 +239,7 @@ function updateStats() {
 // ============================================
 
 function checkSentence() {
-  const sentence = elements.userSentence.value.trim();
+  const sentence = document.getElementById('userSentence').value.trim();
   
   if (!sentence) {
     showFeedback('Write a sentence first!', 'error');
@@ -262,7 +247,7 @@ function checkSentence() {
   }
   
   if (!currentWord) {
-    showFeedback('No word loaded. Click New Word.', 'error');
+    showFeedback('No word loaded.', 'error');
     return;
   }
   
@@ -285,12 +270,21 @@ async function handleSuccess() {
   const today = getTodayString();
   const wordLower = currentWord.word.toLowerCase();
   
-  // Track learned word
   if (!stats.learnedWords.includes(wordLower)) {
     stats.learnedWords.push(wordLower);
     stats.wordsLearned = stats.learnedWords.length;
     
-    // Check for milestones
+    // Add to spaced repetition
+    addToSpacedRepetition(wordLower);
+    
+    // Add to learning history
+    if (!stats.learningHistory[today]) {
+      stats.learningHistory[today] = [];
+    }
+    if (!stats.learningHistory[today].includes(wordLower)) {
+      stats.learningHistory[today].push(wordLower);
+    }
+    
     checkMilestone(stats.wordsLearned);
   }
   
@@ -325,8 +319,65 @@ function isYesterday(dateString) {
 }
 
 function showFeedback(message, type) {
-  elements.feedback.textContent = message;
-  elements.feedback.className = `feedback ${type}`;
+  const feedback = document.getElementById('feedback');
+  feedback.textContent = message;
+  feedback.className = `feedback ${type}`;
+}
+
+// ============================================
+// Spaced Repetition
+// ============================================
+
+function addToSpacedRepetition(word) {
+  const today = new Date();
+  const nextReview = new Date(today);
+  nextReview.setDate(nextReview.getDate() + 1); // First review tomorrow
+  
+  stats.spacedRepetition.push({
+    word: word,
+    nextReview: nextReview.toISOString().split('T')[0],
+    interval: 1,
+    easeFactor: 2.5
+  });
+}
+
+function checkSpacedRepetition() {
+  const today = getTodayString();
+  const dueWords = stats.spacedRepetition.filter(item => item.nextReview <= today);
+  
+  if (dueWords.length > 0) {
+    const srBanner = document.getElementById('srBanner');
+    const srWord = document.getElementById('srWord');
+    srWord.textContent = dueWords[0].word;
+    srBanner.classList.remove('hidden');
+  }
+}
+
+async function reviewSpacedWord() {
+  const today = getTodayString();
+  const dueWords = stats.spacedRepetition.filter(item => item.nextReview <= today);
+  
+  if (dueWords.length > 0) {
+    const wordToReview = dueWords[0].word;
+    const foundWord = VOCABULARY.find(w => w.word.toLowerCase() === wordToReview);
+    
+    if (foundWord) {
+      currentWord = foundWord;
+      updateWordDisplay();
+      document.getElementById('srBanner').classList.add('hidden');
+      
+      // Update review schedule (simplified SM-2)
+      const item = stats.spacedRepetition.find(i => i.word === wordToReview);
+      if (item) {
+        item.interval = Math.round(item.interval * item.easeFactor);
+        const nextDate = new Date();
+        nextDate.setDate(nextDate.getDate() + item.interval);
+        item.nextReview = nextDate.toISOString().split('T')[0];
+      }
+      
+      await saveStats();
+    }
+  }
 }
 
 // ============================================
@@ -334,19 +385,18 @@ function showFeedback(message, type) {
 // ============================================
 
 function checkMilestone(count) {
-  const milestones = [10, 25, 50, 100, 150, 200, 250];
+  const milestones = [10, 25, 50, 100, 150, 200, 250, 300, 365, 500];
   if (milestones.includes(count)) {
     showMilestone(`🎉 ${count} words learned!`);
   }
 }
 
 function showMilestone(text) {
-  elements.milestoneText.textContent = text;
-  elements.milestoneToast.classList.remove('hidden');
+  const toast = document.getElementById('milestoneToast');
+  document.getElementById('milestoneText').textContent = text;
+  toast.classList.remove('hidden');
   
-  setTimeout(() => {
-    elements.milestoneToast.classList.add('hidden');
-  }, 3000);
+  setTimeout(() => toast.classList.add('hidden'), 3000);
 }
 
 // ============================================
@@ -360,7 +410,6 @@ function speakWord() {
   utterance.rate = 0.8;
   utterance.pitch = 1;
   
-  // Try to get a good English voice
   const voices = speechSynthesis.getVoices();
   const englishVoice = voices.find(v => v.lang.startsWith('en-'));
   if (englishVoice) utterance.voice = englishVoice;
@@ -376,7 +425,6 @@ function applyTheme(theme) {
   document.body.setAttribute('data-theme', theme);
   stats.theme = theme;
   
-  // Update theme buttons if settings is open
   document.querySelectorAll('.theme-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.theme === theme);
   });
@@ -391,11 +439,57 @@ function toggleTheme() {
 }
 
 // ============================================
+// Calendar
+// ============================================
+
+function showCalendar() {
+  showView('calendar');
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+  
+  const today = new Date();
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - 90); // Last 90 days
+  
+  let thisMonthCount = 0;
+  const currentMonth = today.getMonth();
+  
+  for (let i = 0; i < 91; i++) {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
+    const dateStr = date.toISOString().split('T')[0];
+    
+    const wordsLearned = stats.learningHistory[dateStr]?.length || 0;
+    
+    if (date.getMonth() === currentMonth) {
+      thisMonthCount += wordsLearned;
+    }
+    
+    const cell = document.createElement('div');
+    cell.className = 'calendar-cell';
+    cell.title = `${dateStr}: ${wordsLearned} words`;
+    
+    if (wordsLearned === 0) cell.classList.add('empty');
+    else if (wordsLearned === 1) cell.classList.add('light');
+    else if (wordsLearned <= 3) cell.classList.add('medium');
+    else cell.classList.add('full');
+    
+    grid.appendChild(cell);
+  }
+  
+  document.getElementById('calTotalWords').textContent = stats.wordsLearned;
+  document.getElementById('calThisMonth').textContent = thisMonthCount;
+}
+
+// ============================================
 // Quiz
 // ============================================
 
 function startQuiz() {
-  // Get 7 random learned words for quiz
   const learnedWordObjects = VOCABULARY.filter(w => 
     stats.learnedWords.includes(w.word.toLowerCase())
   );
@@ -405,7 +499,6 @@ function startQuiz() {
     return;
   }
   
-  // Shuffle and take up to 7
   const shuffled = learnedWordObjects.sort(() => Math.random() - 0.5);
   const quizWords = shuffled.slice(0, Math.min(7, shuffled.length));
   
@@ -441,24 +534,25 @@ function generateQuizOptions(correctWord, allWords) {
 function showQuizQuestion() {
   const q = quizState.questions[quizState.current];
   
-  elements.quizProgress.textContent = `${quizState.current + 1}/${quizState.questions.length}`;
-  elements.quizQuestion.textContent = `What does "${q.word}" mean?`;
+  document.getElementById('quizProgress').textContent = `${quizState.current + 1}/${quizState.questions.length}`;
+  document.getElementById('quizQuestion').textContent = `What does "${q.word}" mean?`;
   
-  elements.quizOptions.innerHTML = '';
+  const optionsEl = document.getElementById('quizOptions');
+  optionsEl.innerHTML = '';
+  
   q.options.forEach(option => {
     const btn = document.createElement('button');
     btn.className = 'quiz-option';
     btn.textContent = option;
     btn.onclick = () => selectQuizOption(btn, option, q.correct);
-    elements.quizOptions.appendChild(btn);
+    optionsEl.appendChild(btn);
   });
   
-  elements.quizResult.classList.add('hidden');
+  document.getElementById('quizResult').classList.add('hidden');
   document.querySelector('.quiz-content').classList.remove('hidden');
 }
 
 function selectQuizOption(btn, selected, correct) {
-  // Disable all options
   document.querySelectorAll('.quiz-option').forEach(b => {
     b.disabled = true;
     if (b.textContent === correct) b.classList.add('correct');
@@ -470,7 +564,6 @@ function selectQuizOption(btn, selected, correct) {
     btn.classList.add('wrong');
   }
   
-  // Next question after delay
   setTimeout(() => {
     quizState.current++;
     if (quizState.current < quizState.questions.length) {
@@ -483,58 +576,58 @@ function selectQuizOption(btn, selected, correct) {
 
 function showQuizResult() {
   document.querySelector('.quiz-content').classList.add('hidden');
-  elements.quizResult.classList.remove('hidden');
+  document.getElementById('quizResult').classList.remove('hidden');
   
-  elements.quizScore.textContent = `${quizState.score}/${quizState.questions.length}`;
+  document.getElementById('quizScore').textContent = `${quizState.score}/${quizState.questions.length}`;
   
   const percent = quizState.score / quizState.questions.length;
-  if (percent === 1) elements.quizMessage.textContent = 'Perfect! 🎯';
-  else if (percent >= 0.7) elements.quizMessage.textContent = 'Great job! 👏';
-  else if (percent >= 0.5) elements.quizMessage.textContent = 'Good effort! 💪';
-  else elements.quizMessage.textContent = 'Keep practicing! 📚';
+  const messages = ['Keep practicing! 📚', 'Good effort! 💪', 'Great job! 👏', 'Perfect! 🎯'];
+  document.getElementById('quizMessage').textContent = messages[Math.min(3, Math.floor(percent * 4))];
 }
 
 // ============================================
 // Word Bank
 // ============================================
 
-function showWordBank(filter = 'all') {
+function showWordBank(filter = 'all', category = null) {
   showView('bank');
-  renderWordBank(filter);
+  renderWordBank(filter, category);
+  generateCategoryFilters();
   
-  // Update filter buttons
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.filter === filter);
   });
 }
 
-function renderWordBank(filter) {
-  let words = [];
+function renderWordBank(filter, category = null) {
+  let words = VOCABULARY.filter(w => stats.learnedWords.includes(w.word.toLowerCase()));
   
-  if (filter === 'all') {
-    words = VOCABULARY.filter(w => stats.learnedWords.includes(w.word.toLowerCase()));
-  } else if (filter === 'favorites') {
-    words = VOCABULARY.filter(w => stats.favorites.includes(w.word.toLowerCase()));
-  } else if (filter === 'mastered') {
-    words = VOCABULARY.filter(w => stats.learnedWords.includes(w.word.toLowerCase()));
+  if (filter === 'favorites') {
+    words = words.filter(w => stats.favorites.includes(w.word.toLowerCase()));
   }
   
+  if (category) {
+    words = words.filter(w => w.category === category);
+  }
+  
+  const listEl = document.getElementById('bankList');
+  const emptyEl = document.getElementById('bankEmpty');
+  
   if (words.length === 0) {
-    elements.bankList.classList.add('hidden');
-    elements.bankEmpty.classList.remove('hidden');
+    listEl.classList.add('hidden');
+    emptyEl.classList.remove('hidden');
     return;
   }
   
-  elements.bankEmpty.classList.add('hidden');
-  elements.bankList.classList.remove('hidden');
-  elements.bankList.innerHTML = '';
+  emptyEl.classList.add('hidden');
+  listEl.classList.remove('hidden');
+  listEl.innerHTML = '';
   
   words.forEach(word => {
-    const item = document.createElement('div');
-    item.className = 'bank-item';
-    
     const isFav = stats.favorites.includes(word.word.toLowerCase());
     
+    const item = document.createElement('div');
+    item.className = 'bank-item';
     item.innerHTML = `
       <div>
         <div class="bank-item-word">${word.word}</div>
@@ -543,12 +636,29 @@ function renderWordBank(filter) {
       <button class="bank-item-fav ${isFav ? 'active' : ''}" data-word="${word.word.toLowerCase()}">⭐</button>
     `;
     
-    elements.bankList.appendChild(item);
+    listEl.appendChild(item);
   });
   
-  // Add favorite toggle handlers
   document.querySelectorAll('.bank-item-fav').forEach(btn => {
     btn.onclick = () => toggleFavorite(btn.dataset.word, btn);
+  });
+}
+
+function generateCategoryFilters() {
+  const container = document.getElementById('categoryFilters');
+  container.innerHTML = '';
+  
+  const learnedCategories = [...new Set(
+    VOCABULARY.filter(w => stats.learnedWords.includes(w.word.toLowerCase()))
+      .map(w => w.category)
+  )];
+  
+  learnedCategories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-filter-btn';
+    btn.textContent = cat;
+    btn.onclick = () => showWordBank('all', cat);
+    container.appendChild(btn);
   });
 }
 
@@ -567,9 +677,9 @@ async function toggleFavorite(word, btn) {
 function exportWords() {
   const words = VOCABULARY.filter(w => stats.learnedWords.includes(w.word.toLowerCase()));
   
-  let csv = 'Word,Part of Speech,Definition,Example\n';
+  let csv = 'Word,Part of Speech,Definition,Category,Example\n';
   words.forEach(w => {
-    csv += `"${w.word}","${w.partOfSpeech}","${w.definition}","${w.example}"\n`;
+    csv += `"${w.word}","${w.partOfSpeech}","${w.definition}","${w.category}","${w.example}"\n`;
   });
   
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -584,21 +694,155 @@ function exportWords() {
 }
 
 // ============================================
+// Share Card
+// ============================================
+
+function showShareModal() {
+  if (!currentWord) return;
+  
+  document.getElementById('shareCardWord').textContent = currentWord.word;
+  document.getElementById('shareCardPos').textContent = currentWord.partOfSpeech;
+  document.getElementById('shareCardDef').textContent = currentWord.definition;
+  
+  document.getElementById('shareModal').classList.remove('hidden');
+}
+
+function hideShareModal() {
+  document.getElementById('shareModal').classList.add('hidden');
+}
+
+async function copyShareCard() {
+  const card = document.getElementById('shareCard');
+  
+  try {
+    const canvas = await html2canvas(card);
+    canvas.toBlob(async (blob) => {
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]);
+      showFeedback('Card copied to clipboard!', 'success');
+    });
+  } catch (e) {
+    // Fallback: copy text
+    const text = `📚 Word of the Day: ${currentWord.word}\n${currentWord.partOfSpeech} — ${currentWord.definition}`;
+    navigator.clipboard.writeText(text);
+    showFeedback('Text copied to clipboard!', 'success');
+  }
+  
+  hideShareModal();
+}
+
+function downloadShareCard() {
+  const card = document.getElementById('shareCard');
+  
+  // Create canvas manually for download
+  const canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 250;
+  const ctx = canvas.getContext('2d');
+  
+  // Draw background
+  ctx.fillStyle = stats.theme === 'dark' ? '#1e1e24' : '#ffffff';
+  ctx.fillRect(0, 0, 400, 250);
+  
+  // Draw accent bar
+  ctx.fillStyle = '#c4602d';
+  ctx.fillRect(0, 0, 400, 4);
+  
+  // Draw text
+  ctx.fillStyle = stats.theme === 'dark' ? '#f4f4f6' : '#1a1a18';
+  ctx.font = '12px Instrument Sans';
+  ctx.fillText('Word of the Day', 24, 35);
+  
+  ctx.font = 'bold 32px Fraunces';
+  ctx.fillText(currentWord.word, 24, 90);
+  
+  ctx.font = 'italic 14px Fraunces';
+  ctx.fillStyle = '#c4602d';
+  ctx.fillText(currentWord.partOfSpeech, 24, 115);
+  
+  ctx.font = '16px Instrument Sans';
+  ctx.fillStyle = stats.theme === 'dark' ? '#a0a0aa' : '#6b6860';
+  
+  // Word wrap definition
+  const words = currentWord.definition.split(' ');
+  let line = '';
+  let y = 150;
+  words.forEach(word => {
+    const testLine = line + word + ' ';
+    if (ctx.measureText(testLine).width > 350) {
+      ctx.fillText(line, 24, y);
+      line = word + ' ';
+      y += 24;
+    } else {
+      line = testLine;
+    }
+  });
+  ctx.fillText(line, 24, y);
+  
+  // Footer
+  ctx.font = '11px Instrument Sans';
+  ctx.fillStyle = '#a09a92';
+  ctx.fillText('wordoftheday.app', 24, 230);
+  
+  // Download
+  const link = document.createElement('a');
+  link.download = `${currentWord.word}-word-of-the-day.png`;
+  link.href = canvas.toDataURL();
+  link.click();
+  
+  hideShareModal();
+}
+
+// ============================================
 // Settings
 // ============================================
 
 function showSettings() {
   showView('settings');
   
-  // Update difficulty buttons
   document.querySelectorAll('[data-difficulty]').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.difficulty) === stats.difficulty);
   });
   
-  // Update theme buttons
   document.querySelectorAll('.theme-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.theme === stats.theme);
   });
+  
+  const notifToggle = document.getElementById('notificationToggle');
+  notifToggle.classList.toggle('active', stats.notificationsEnabled);
+}
+
+function generateCategoryToggles() {
+  const container = document.getElementById('categoryToggles');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  const categories = [...new Set(VOCABULARY.map(w => w.category))].sort();
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'setting-btn cat-toggle';
+    btn.textContent = cat;
+    btn.dataset.category = cat;
+    btn.classList.toggle('active', stats.enabledCategories.includes(cat));
+    btn.onclick = () => toggleCategory(cat, btn);
+    container.appendChild(btn);
+  });
+}
+
+async function toggleCategory(category, btn) {
+  const index = stats.enabledCategories.indexOf(category);
+  if (index > -1) {
+    if (stats.enabledCategories.length > 1) {
+      stats.enabledCategories.splice(index, 1);
+      btn.classList.remove('active');
+    }
+  } else {
+    stats.enabledCategories.push(category);
+    btn.classList.add('active');
+  }
+  await saveStats();
 }
 
 async function setDifficulty(level) {
@@ -608,6 +852,24 @@ async function setDifficulty(level) {
   document.querySelectorAll('[data-difficulty]').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.difficulty) === level);
   });
+}
+
+async function toggleNotifications() {
+  stats.notificationsEnabled = !stats.notificationsEnabled;
+  
+  const toggle = document.getElementById('notificationToggle');
+  toggle.classList.toggle('active', stats.notificationsEnabled);
+  
+  if (stats.notificationsEnabled) {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      stats.notificationsEnabled = false;
+      toggle.classList.remove('active');
+      showFeedback('Notification permission denied', 'error');
+    }
+  }
+  
+  await saveStats();
 }
 
 async function resetProgress() {
@@ -621,7 +883,12 @@ async function resetProgress() {
       favorites: [],
       lastPracticeDate: null,
       difficulty: stats.difficulty,
-      theme: stats.theme
+      theme: stats.theme,
+      notificationsEnabled: false,
+      isFirstTime: false,
+      spacedRepetition: [],
+      learningHistory: {},
+      enabledCategories: stats.enabledCategories
     };
     await saveStats();
     await getNewWord();
@@ -635,10 +902,11 @@ async function resetProgress() {
 // ============================================
 
 function showView(view) {
-  elements.mainView.classList.toggle('hidden', view !== 'main');
-  elements.quizView.classList.toggle('hidden', view !== 'quiz');
-  elements.bankView.classList.toggle('hidden', view !== 'bank');
-  elements.settingsView.classList.toggle('hidden', view !== 'settings');
+  document.getElementById('mainView').classList.toggle('hidden', view !== 'main');
+  document.getElementById('calendarView').classList.toggle('hidden', view !== 'calendar');
+  document.getElementById('quizView').classList.toggle('hidden', view !== 'quiz');
+  document.getElementById('bankView').classList.toggle('hidden', view !== 'bank');
+  document.getElementById('settingsView').classList.toggle('hidden', view !== 'settings');
 }
 
 // ============================================
@@ -651,11 +919,9 @@ function copyTemplate() {
   const template = `The word "${currentWord.word}" means "${currentWord.definition}". `;
   navigator.clipboard.writeText(template);
   
-  // Visual feedback
-  elements.copyBtn.style.color = 'var(--success)';
-  setTimeout(() => {
-    elements.copyBtn.style.color = '';
-  }, 1000);
+  const btn = document.getElementById('copyBtn');
+  btn.style.color = 'var(--success)';
+  setTimeout(() => btn.style.color = '', 1000);
 }
 
 // ============================================
@@ -663,19 +929,26 @@ function copyTemplate() {
 // ============================================
 
 function setupEventListeners() {
+  // Onboarding
+  document.getElementById('onboardingDone').addEventListener('click', hideOnboarding);
+  
   // Header
-  elements.themeToggle.addEventListener('click', toggleTheme);
-  elements.settingsBtn.addEventListener('click', showSettings);
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+  document.getElementById('settingsBtn').addEventListener('click', showSettings);
+  
+  // Spaced repetition
+  document.getElementById('srReviewBtn')?.addEventListener('click', reviewSpacedWord);
   
   // Word actions
-  elements.audioBtn.addEventListener('click', speakWord);
-  elements.skipBtn.addEventListener('click', skipWord);
-  elements.newWordBtn.addEventListener('click', getNewWord);
+  document.getElementById('audioBtn').addEventListener('click', speakWord);
+  document.getElementById('skipBtn').addEventListener('click', skipWord);
+  document.getElementById('newWordBtn').addEventListener('click', getNewWord);
   
   // Practice
-  elements.checkBtn.addEventListener('click', checkSentence);
-  elements.copyBtn.addEventListener('click', copyTemplate);
-  elements.userSentence.addEventListener('keydown', (e) => {
+  document.getElementById('checkBtn').addEventListener('click', checkSentence);
+  document.getElementById('copyBtn').addEventListener('click', copyTemplate);
+  document.getElementById('shareBtn').addEventListener('click', showShareModal);
+  document.getElementById('userSentence').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       checkSentence();
@@ -683,24 +956,29 @@ function setupEventListeners() {
   });
   
   // Footer buttons
-  elements.quizBtn.addEventListener('click', startQuiz);
-  elements.bankBtn.addEventListener('click', () => showWordBank('all'));
+  document.getElementById('calendarBtn').addEventListener('click', showCalendar);
+  document.getElementById('quizBtn').addEventListener('click', startQuiz);
+  document.getElementById('bankBtn').addEventListener('click', () => showWordBank('all'));
+  
+  // Calendar view
+  document.getElementById('calendarBackBtn').addEventListener('click', () => showView('main'));
   
   // Quiz view
-  elements.quizBackBtn.addEventListener('click', () => showView('main'));
-  elements.quizDoneBtn.addEventListener('click', () => showView('main'));
+  document.getElementById('quizBackBtn').addEventListener('click', () => showView('main'));
+  document.getElementById('quizDoneBtn').addEventListener('click', () => showView('main'));
   
   // Bank view
-  elements.bankBackBtn.addEventListener('click', () => showView('main'));
-  elements.exportBtn.addEventListener('click', exportWords);
+  document.getElementById('bankBackBtn').addEventListener('click', () => showView('main'));
+  document.getElementById('exportBtn').addEventListener('click', exportWords);
   
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => showWordBank(btn.dataset.filter));
   });
   
   // Settings view
-  elements.settingsBackBtn.addEventListener('click', () => showView('main'));
-  elements.resetBtn.addEventListener('click', resetProgress);
+  document.getElementById('settingsBackBtn').addEventListener('click', () => showView('main'));
+  document.getElementById('resetBtn').addEventListener('click', resetProgress);
+  document.getElementById('notificationToggle').addEventListener('click', toggleNotifications);
   
   document.querySelectorAll('[data-difficulty]').forEach(btn => {
     btn.addEventListener('click', () => setDifficulty(parseInt(btn.dataset.difficulty)));
@@ -712,11 +990,15 @@ function setupEventListeners() {
       saveStats();
     });
   });
+  
+  // Share modal
+  document.getElementById('shareClose').addEventListener('click', hideShareModal);
+  document.getElementById('copyShareCard').addEventListener('click', copyShareCard);
+  document.getElementById('downloadShareCard').addEventListener('click', downloadShareCard);
 }
 
 function setupKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
-    // Only handle shortcuts when not typing in textarea
     if (e.target.tagName === 'TEXTAREA') return;
     
     switch(e.key.toLowerCase()) {
@@ -726,10 +1008,11 @@ function setupKeyboardShortcuts() {
       case 't': toggleTheme(); break;
       case 'q': startQuiz(); break;
       case 'b': showWordBank('all'); break;
-      case 'escape': showView('main'); break;
+      case 'c': showCalendar(); break;
+      case 'escape': showView('main'); hideShareModal(); break;
     }
   });
 }
 
-// Load voices for speech synthesis
+// Load voices
 speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
