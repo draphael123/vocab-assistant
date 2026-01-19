@@ -3,1097 +3,380 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Word of the Day — Expand Your Vocabulary</title>
+  <title>Word of the Day - Level Up Your Vocabulary</title>
+  <meta name="description" content="Learn one new word every day. A beautiful, distraction-free vocabulary builder. Free Chrome extension.">
   <link rel="stylesheet" href="landing.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Animated background -->
+  <!-- Animated Background -->
   <div class="bg-gradient"></div>
-
+  <div class="particles" id="particles"></div>
+  
+  <!-- Navigation -->
   <nav class="nav">
-    <a href="#" class="nav-logo">WOTD</a>
-    <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#faq">FAQ</a>
+    <div class="nav-logo">
+      <span class="logo-badge">DAILY</span>
+      <span class="logo-text">WORD</span>
     </div>
-    <div class="nav-right">
-      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
-      <a href="word-of-the-day-extension.zip" download class="nav-cta">Download Free</a>
+    <div class="nav-icons">
+      <a href="#features" class="nav-icon" title="Features">💡</a>
+      <a href="#categories" class="nav-icon" title="Categories">📚</a>
+      <a href="#stats" class="nav-icon" title="Progress">🏆</a>
+      <a href="#download" class="nav-icon" title="Download">📦</a>
+      <a href="https://github.com/draphael123/vocab-assistant" class="nav-icon" title="GitHub">⚙️</a>
+      <a href="#faq" class="nav-icon" title="FAQ">❓</a>
     </div>
   </nav>
 
-  <main>
-    <!-- Hero -->
-    <section class="hero">
-      <div class="hero-content">
-        <div class="hero-badge">
-          <span>Chrome Extension</span>
-          <span>•</span>
-          <span>100% Free</span>
-        </div>
-        
-        <h1>
-          Learn one word<br>
-          <em>every single day.</em>
-          <span class="small">That's 365 new words per year.</span>
-        </h1>
-        
-        <p class="hero-description">
-          A distraction-free vocabulary builder. No accounts, no subscriptions, 
-          no dark patterns. Just you and a new word each morning.
-        </p>
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="hero-badge">CHROME EXTENSION</div>
+    <h1 class="hero-title">WORD</h1>
+    <div class="hero-accent"></div>
+    <p class="hero-tagline">LEVEL UP YOUR VOCABULARY GAME</p>
+    <div class="hero-date" id="todayDate"></div>
+    
+    <!-- Live Word Card -->
+    <div class="word-card">
+      <div class="word-card-header">
+        <span class="word-number">#1</span>
+        <span class="word-pos">NOUN</span>
+        <span class="word-level">SAT LEVEL</span>
+        <button class="word-fav">♡</button>
+      </div>
+      <h2 class="word-text">Ephemeral</h2>
+      <div class="word-pronunciation">
+        <span>/ɪˈfem(ə)rəl/</span>
+        <button class="audio-btn" onclick="speakWord('ephemeral')">🔊</button>
+      </div>
+      <div class="word-section">
+        <span class="section-icon">💡</span>
+        <span class="section-label">MEANING</span>
+      </div>
+      <p class="word-definition">Lasting for a very short time; transient and fleeting.</p>
+      <div class="word-section">
+        <span class="section-icon">💬</span>
+        <span class="section-label">IN ACTION</span>
+      </div>
+      <p class="word-example">"The ephemeral beauty of cherry blossoms draws millions of visitors each spring."</p>
+      <div class="word-section">
+        <span class="section-icon">📜</span>
+        <span class="section-label">ORIGIN</span>
+      </div>
+      <p class="word-etymology">Greek 'ephemeros' — lasting only a day</p>
+    </div>
 
-        <!-- Hero Download Button -->
-        <div class="hero-download">
-          <a href="word-of-the-day-extension.zip" download class="download-btn">
-            <span class="download-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-            </span>
-            <span class="download-text">
-              <strong>Download Extension</strong>
-              <small>Free • No account required</small>
-            </span>
-          </a>
-          <div class="download-meta">
-            <span>📦 ZIP file</span>
-            <span>•</span>
-            <span>v2.0.0</span>
-            <span>•</span>
-            <span>Updated Jan 2026</span>
-          </div>
-        </div>
+    <!-- CTA Buttons -->
+    <div class="hero-cta">
+      <a href="word-of-the-day-extension.zip" download class="btn-primary">
+        <span class="btn-icon">⬇️</span>
+        Download Free
+      </a>
+      <a href="#features" class="btn-secondary">See Features</a>
+    </div>
+    <p class="hero-meta">📦 v3.0.0 • Free Forever • No Account Required</p>
+  </header>
 
-        <!-- Install Instructions -->
-        <div class="install-steps">
-          <div class="step">
-            <span class="step-num">1</span>
-            <span>Download & unzip</span>
-          </div>
-          <div class="step">
-            <span class="step-num">2</span>
-            <span>Go to chrome://extensions</span>
-          </div>
-          <div class="step">
-            <span class="step-num">3</span>
-            <span>Enable "Developer mode"</span>
-          </div>
-          <div class="step">
-            <span class="step-num">4</span>
-            <span>Click "Load unpacked"</span>
-          </div>
+  <!-- Stats Bar -->
+  <section class="stats-bar" id="stats">
+    <div class="stat">
+      <span class="stat-value">200+</span>
+      <span class="stat-label">Curated Words</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">8</span>
+      <span class="stat-label">Categories</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">0</span>
+      <span class="stat-label">Tracking</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">∞</span>
+      <span class="stat-label">Free Forever</span>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <span class="section-number">01</span>
+      <h2 class="section-title">Packed with Features</h2>
+      <p class="section-subtitle">Everything you need to build a powerful vocabulary</p>
+    </div>
+    
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🎮</span>
+        <h3>XP & Leveling</h3>
+        <p>Earn points, level up from Novice to Word Wizard</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🏆</span>
+        <h3>20 Achievements</h3>
+        <p>Unlock badges like Early Bird, Speed Demon, Scholar</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <h3>Analytics Dashboard</h3>
+        <p>Track progress by category, difficulty, quiz scores</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <h3>Daily Challenges</h3>
+        <p>New challenge every day with bonus XP rewards</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔊</span>
+        <h3>Audio Pronunciation</h3>
+        <p>Hear every word with adjustable speed</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📚</span>
+        <h3>Word Etymology</h3>
+        <p>Learn origins to make words stick</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔄</span>
+        <h3>Spaced Repetition</h3>
+        <p>Smart review reminders using Leitner system</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🧊</span>
+        <h3>Streak Freeze</h3>
+        <p>One free pass per week protects your streak</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⭐</span>
+        <h3>Word Mastery</h3>
+        <p>5-star system tracks your progress per word</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎯</span>
+        <h3>Challenge Modes</h3>
+        <p>Speed rounds, reverse quiz, fill-in-blank</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📥</span>
+        <h3>Import/Export</h3>
+        <p>CSV export, JSON backup, custom word lists</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🌙</span>
+        <h3>Three Themes</h3>
+        <p>Light, dark, and sepia modes</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="categories" id="categories">
+    <div class="section-header">
+      <span class="section-number">02</span>
+      <h2 class="section-title">8 Word Categories</h2>
+      <p class="section-subtitle">Curated for different contexts and goals</p>
+    </div>
+    
+    <div class="categories-grid">
+      <div class="category-card">
+        <span class="category-icon">📖</span>
+        <h3>General</h3>
+        <p>Ephemeral, Ubiquitous, Serendipity</p>
+      </div>
+      <div class="category-card">
+        <span class="category-icon">💼</span>
+        <h3>Business</h3>
+        <p>Synergy, Leverage, Fiduciary</p>
+      </div>
+      <div class="category-card">
+        <span class="category-icon">📚</span>
+        <h3>Literature</h3>
+        <p>Allegory, Catharsis, Denouement</p>
+      </div>
+      <div class="category-card">
+        <span class="category-icon">🔬</span>
+        <h3>Science</h3>
+        <p>Entropy, Catalyst, Empirical</p>
+      </div>
+      <div class="category-card">
+        <span class="category-icon">💭</span>
+        <h3>Philosophy</h3>
+        <p>Nihilism, Dialectic, Epistemology</p>
+      </div>
+      <div class="category-card">
+        <span class="category-icon">⚖️</span>
+        <h3>Law</h3>
+        <p>Adjudicate, Precedent, Litigious</p>
+      </div>
+      <div class="category-card">
+        <span class="category-icon">🏥</span>
+        <h3>Medicine</h3>
+        <p>Prognosis, Benign, Remission</p>
+      </div>
+      <div class="category-card">
+        <span class="category-icon">🎨</span>
+        <h3>Arts</h3>
+        <p>Avant-garde, Baroque, Evocative</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy Section -->
+  <section class="privacy">
+    <div class="section-header">
+      <span class="section-number">03</span>
+      <h2 class="section-title">Your Data, Your Device</h2>
+      <p class="section-subtitle">Zero tracking. Zero accounts. 100% private.</p>
+    </div>
+    
+    <div class="privacy-grid">
+      <div class="privacy-item">
+        <span class="privacy-check">✓</span>
+        <div>
+          <h4>No email signup</h4>
+          <p>Download and start learning instantly</p>
         </div>
       </div>
-
-      <div class="hero-visual">
-        <div class="demo-wrapper">
-          <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-          </div>
-          <div class="demo-card">
-            <span class="demo-tag">PREVIEW</span>
-            <div class="demo-day">Monday, Jan 19</div>
-            <div class="demo-word" id="carouselWord">Ephemeral</div>
-            <div class="demo-pronunciation" id="carouselPronunciation">/ɪˈfem(ə)rəl/</div>
-            <p class="demo-definition" id="carouselDefinition">lasting for a very short time; transient</p>
-            <div class="demo-origin">
-              <span class="demo-origin-label">Origin</span>
-              <span class="demo-origin-text" id="carouselOrigin">Greek 'ephemeros' — lasting only a day</span>
-            </div>
-            <div class="demo-input" id="demoInput">
-              <span id="typedText"></span><span class="cursor">|</span>
-            </div>
-            <div class="demo-success hidden" id="demoSuccess">
-              ✓ Word learned! Streak: 7 days
-            </div>
-          </div>
+      <div class="privacy-item">
+        <span class="privacy-check">✓</span>
+        <div>
+          <h4>No data leaves your browser</h4>
+          <p>Everything stored locally with Chrome</p>
         </div>
       </div>
-    </section>
-
-    <!-- Stats Bar -->
-    <section class="stats-bar">
-      <div class="stats-container">
-        <div class="stat-item">
-          <span class="stat-number">200+</span>
-          <span class="stat-label">Curated Words</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-number">8</span>
-          <span class="stat-label">Categories</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-number">0</span>
-          <span class="stat-label">Tracking</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-number">∞</span>
-          <span class="stat-label">Free Forever</span>
+      <div class="privacy-item">
+        <span class="privacy-check">✓</span>
+        <div>
+          <h4>Works completely offline</h4>
+          <p>No internet required after install</p>
         </div>
       </div>
-    </section>
-
-    <!-- See It In Action -->
-    <section class="action-section">
-      <div class="action-container">
-        <div class="section-header">
-          <span class="section-number">✨</span>
-          <h2 class="section-title">See it in action</h2>
-        </div>
-        <p class="action-intro">Watch the extension do its thing. No smoke and mirrors.</p>
-        
-        <div class="action-grid">
-          <!-- Demo 1: Word Card -->
-          <div class="action-demo">
-            <div class="demo-label">Daily Word</div>
-            <div class="action-card">
-              <div class="action-card-header">
-                <span class="action-tag">SAT</span>
-                <span class="action-stars">★★★☆☆</span>
-              </div>
-              <div class="action-word">Ephemeral</div>
-              <div class="action-pos">adjective • /ɪˈfem(ə)rəl/</div>
-              <div class="action-def">lasting for a very short time</div>
-              <div class="action-origin">
-                <span>Origin:</span> Greek 'ephemeros' — lasting only a day
-              </div>
-              <div class="action-audio-btn">
-                <span>🔊</span> Listen
-              </div>
-            </div>
-          </div>
-
-          <!-- Demo 2: Challenge Mode -->
-          <div class="action-demo">
-            <div class="demo-label">Challenge Mode</div>
-            <div class="action-card challenge-card">
-              <div class="challenge-header">
-                <span>Speed Round</span>
-                <span class="challenge-timer">⏱ 47s</span>
-              </div>
-              <div class="challenge-progress-bar">
-                <div class="challenge-fill" style="width: 60%"></div>
-              </div>
-              <div class="challenge-question">What does "laconic" mean?</div>
-              <div class="challenge-options">
-                <div class="challenge-opt">Extremely talkative</div>
-                <div class="challenge-opt correct">Using very few words</div>
-                <div class="challenge-opt">Full of energy</div>
-                <div class="challenge-opt">Deeply sad</div>
-              </div>
-              <div class="challenge-score">6/10 correct</div>
-            </div>
-          </div>
-
-          <!-- Demo 3: Confetti -->
-          <div class="action-demo">
-            <div class="demo-label">Milestones</div>
-            <div class="action-card confetti-card">
-              <div class="confetti-burst">
-                <span class="confetti c1">🎊</span>
-                <span class="confetti c2">🎉</span>
-                <span class="confetti c3">✨</span>
-                <span class="confetti c4">⭐</span>
-                <span class="confetti c5">🎊</span>
-              </div>
-              <div class="milestone-badge">🏆</div>
-              <div class="milestone-text">50 words learned!</div>
-              <div class="milestone-sub">You're in the top 10% of learners</div>
-            </div>
-          </div>
-
-          <!-- Demo 4: Streak Freeze -->
-          <div class="action-demo">
-            <div class="demo-label">Streak Protection</div>
-            <div class="action-card freeze-card">
-              <div class="freeze-header">
-                <span class="freeze-emoji">🧊</span>
-                <span>Streak Saved!</span>
-              </div>
-              <div class="streak-display">
-                <div class="streak-num">14</div>
-                <div class="streak-label">day streak</div>
-              </div>
-              <div class="freeze-note">
-                Your streak freeze protected your progress.<br>
-                <small>1 freeze used this week • Resets Monday</small>
-              </div>
-            </div>
-          </div>
+      <div class="privacy-item">
+        <span class="privacy-check">✓</span>
+        <div>
+          <h4>Open source</h4>
+          <p>Verify the code yourself on GitHub</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Privacy Section -->
-    <section class="privacy-section">
-      <div class="privacy-container">
-        <div class="privacy-header">
-          <span class="section-number">01</span>
-          <h2 class="section-title">No account. No tracking. No nonsense.</h2>
-        </div>
-        <p class="privacy-intro">Your vocabulary journey is completely private.</p>
-        
-        <div class="privacy-grid">
-          <div class="privacy-item">
-            <span class="privacy-icon">✓</span>
-            <div>
-              <strong>No email signup</strong>
-              <p>Just download and start learning</p>
-            </div>
-          </div>
-          <div class="privacy-item">
-            <span class="privacy-icon">✓</span>
-            <div>
-              <strong>No data leaves your browser</strong>
-              <p>Everything stored locally with Chrome</p>
-            </div>
-          </div>
-          <div class="privacy-item">
-            <span class="privacy-icon">✓</span>
-            <div>
-              <strong>Works completely offline</strong>
-              <p>No internet required after install</p>
-            </div>
-          </div>
-          <div class="privacy-item">
-            <span class="privacy-icon">✓</span>
-            <div>
-              <strong>Nothing to cancel</strong>
-              <p>No subscriptions, ever</p>
-            </div>
-          </div>
-        </div>
+  <!-- Download Section -->
+  <section class="download" id="download">
+    <div class="section-header">
+      <span class="section-number">04</span>
+      <h2 class="section-title">Get Started in 60 Seconds</h2>
+    </div>
+    
+    <div class="install-steps">
+      <div class="step">
+        <span class="step-num">1</span>
+        <h4>Download & Unzip</h4>
+        <p>Get the ZIP file below</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <h4>Open Extensions</h4>
+        <p>Go to chrome://extensions</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <h4>Developer Mode</h4>
+        <p>Toggle it on (top right)</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <span class="step-num">4</span>
+        <h4>Load Unpacked</h4>
+        <p>Select the unzipped folder</p>
+      </div>
+    </div>
+    
+    <a href="word-of-the-day-extension.zip" download class="btn-download">
+      <span class="btn-icon">⬇️</span>
+      Download Extension
+      <span class="btn-meta">ZIP • v3.0.0 • 150KB</span>
+    </a>
+  </section>
 
-        <div class="open-source-badge">
-          <a href="https://github.com/draphael123/vocab-assistant" target="_blank">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-            <span>Open Source on GitHub</span>
-          </a>
-        </div>
+  <!-- FAQ Section -->
+  <section class="faq" id="faq">
+    <div class="section-header">
+      <span class="section-number">05</span>
+      <h2 class="section-title">Questions?</h2>
+    </div>
+    
+    <div class="faq-grid">
+      <div class="faq-item">
+        <h4>Is it really free?</h4>
+        <p>Yes. No trials, no premium tier, no hidden costs. Open source forever.</p>
       </div>
-    </section>
+      <div class="faq-item">
+        <h4>Do I need an account?</h4>
+        <p>No. Progress is stored locally. No email, no password, no verification.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Does it track me?</h4>
+        <p>No. Zero analytics. Works entirely offline. Completely private.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Good for SAT/GRE?</h4>
+        <p>Yes! Set difficulty to SAT or GRE. Export to CSV for flashcard apps.</p>
+      </div>
+    </div>
+  </section>
 
-    <!-- Why It Works Section -->
-    <section class="science-section">
-      <div class="science-container">
-        <div class="section-header">
-          <span class="section-number">02</span>
-          <h2 class="section-title">Why one word a day works</h2>
-        </div>
-        
-        <div class="science-content">
-          <div class="science-text">
-            <p class="science-lead">It's not about cramming. It's about <em>consistency</em>.</p>
-            <p>Research shows that spaced repetition — learning small amounts regularly over time — is far more effective than intensive study sessions. Your brain consolidates memories during sleep, so learning one word each morning gives it 24 hours to stick.</p>
-            <p>Active recall (writing your own sentence) strengthens neural pathways more than passive reading. That's why we ask you to use each word, not just read its definition.</p>
-            
-            <div class="science-stats">
-              <div class="science-stat">
-                <span class="science-stat-num">365</span>
-                <span class="science-stat-label">words per year</span>
-              </div>
-              <div class="science-stat">
-                <span class="science-stat-num">2 min</span>
-                <span class="science-stat-label">per day</span>
-              </div>
-              <div class="science-stat">
-                <span class="science-stat-num">90%</span>
-                <span class="science-stat-label">retention rate</span>
-              </div>
-            </div>
-          </div>
-        </div>
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <span class="logo-badge">DAILY</span>
+        <span class="logo-text">WORD</span>
       </div>
-    </section>
-
-    <!-- Word Categories -->
-    <section class="categories-section">
-      <div class="categories-container">
-        <div class="section-header">
-          <span class="section-number">03</span>
-          <h2 class="section-title">8 categories, one goal</h2>
-        </div>
-        <p class="categories-intro">Words curated for different contexts and interests.</p>
-        
-        <div class="categories-grid">
-          <div class="category-card">
-            <span class="category-emoji">📖</span>
-            <h3>General</h3>
-            <p>Ephemeral, Ubiquitous, Serendipity</p>
-          </div>
-          <div class="category-card">
-            <span class="category-emoji">💼</span>
-            <h3>Business</h3>
-            <p>Synergy, Leverage, Fiduciary</p>
-          </div>
-          <div class="category-card">
-            <span class="category-emoji">📚</span>
-            <h3>Literature</h3>
-            <p>Allegory, Catharsis, Denouement</p>
-          </div>
-          <div class="category-card">
-            <span class="category-emoji">🔬</span>
-            <h3>Science</h3>
-            <p>Entropy, Catalyst, Empirical</p>
-          </div>
-          <div class="category-card">
-            <span class="category-emoji">💭</span>
-            <h3>Philosophy</h3>
-            <p>Nihilism, Dialectic, Epistemology</p>
-          </div>
-          <div class="category-card">
-            <span class="category-emoji">⚖️</span>
-            <h3>Law</h3>
-            <p>Adjudicate, Precedent, Fiduciary</p>
-          </div>
-          <div class="category-card">
-            <span class="category-emoji">🏥</span>
-            <h3>Medicine</h3>
-            <p>Prognosis, Benign, Remission</p>
-          </div>
-          <div class="category-card">
-            <span class="category-emoji">🎨</span>
-            <h3>Arts</h3>
-            <p>Avant-garde, Baroque, Evocative</p>
-          </div>
-        </div>
+      <p class="footer-tagline">365 new words per year. 2 minutes per day.</p>
+      <div class="footer-links">
+        <a href="https://github.com/draphael123/vocab-assistant">GitHub</a>
+        <span>•</span>
+        <span>v3.0.0</span>
       </div>
-    </section>
-
-    <!-- Progress Visualization -->
-    <section class="progress-section">
-      <div class="progress-container">
-        <div class="section-header">
-          <span class="section-number">04</span>
-          <h2 class="section-title">Watch your progress grow</h2>
-        </div>
-        <p class="progress-intro">This is what 90 days of learning looks like.</p>
-        
-        <div class="progress-demo">
-          <div class="calendar-mock">
-            <div class="calendar-header">
-              <span>Oct</span>
-              <span>Nov</span>
-              <span>Dec</span>
-            </div>
-            <div class="calendar-grid" id="mockCalendar">
-              <!-- Generated by JS -->
-            </div>
-            <div class="calendar-legend">
-              <span><span class="legend-box l0"></span>None</span>
-              <span><span class="legend-box l1"></span>1</span>
-              <span><span class="legend-box l2"></span>2-3</span>
-              <span><span class="legend-box l3"></span>4+</span>
-            </div>
-          </div>
-          
-          <div class="progress-milestones">
-            <div class="milestone">
-              <span class="milestone-day">Day 7</span>
-              <span class="milestone-words">7 words</span>
-              <span class="milestone-note">First week complete!</span>
-            </div>
-            <div class="milestone">
-              <span class="milestone-day">Day 30</span>
-              <span class="milestone-words">30 words</span>
-              <span class="milestone-note">You're building a habit</span>
-            </div>
-            <div class="milestone featured">
-              <span class="milestone-day">Day 90</span>
-              <span class="milestone-words">90 words</span>
-              <span class="milestone-note">You could be here →</span>
-            </div>
-            <div class="milestone">
-              <span class="milestone-day">Day 365</span>
-              <span class="milestone-words">365 words</span>
-              <span class="milestone-note">Vocabulary transformed</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Use Cases -->
-    <section class="usecases-section">
-      <div class="usecases-container">
-        <div class="section-header">
-          <span class="section-number">05</span>
-          <h2 class="section-title">Built for everyone</h2>
-        </div>
-        
-        <div class="usecases-grid">
-          <div class="usecase-card">
-            <span class="usecase-icon">🎓</span>
-            <h3>For SAT/GRE Prep</h3>
-            <p>Set difficulty to "SAT" or "GRE" and learn exactly the words that appear on standardized tests. Export to CSV for flashcard apps.</p>
-          </div>
-          <div class="usecase-card">
-            <span class="usecase-icon">✍️</span>
-            <h3>For Writers</h3>
-            <p>Expand your working vocabulary with precise, evocative words. The etymology helps you use them correctly in context.</p>
-          </div>
-          <div class="usecase-card">
-            <span class="usecase-icon">🌍</span>
-            <h3>For English Learners</h3>
-            <p>Audio pronunciation and example sentences help you learn not just definitions, but how words actually sound and feel.</p>
-          </div>
-          <div class="usecase-card">
-            <span class="usecase-icon">💼</span>
-            <h3>For Professionals</h3>
-            <p>Business, legal, and scientific vocabulary to communicate more precisely in meetings, emails, and presentations.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Comparison Table -->
-    <section class="comparison-section">
-      <div class="comparison-container">
-        <div class="section-header">
-          <span class="section-number">06</span>
-          <h2 class="section-title">How we compare</h2>
-        </div>
-        <p class="comparison-intro">We built what we wished existed.</p>
-        
-        <div class="comparison-table-wrapper">
-          <table class="comparison-table">
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th class="highlight">Word of the Day</th>
-                <th>Vocabulary.com</th>
-                <th>Merriam-Webster</th>
-                <th>Quizlet</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Completely free</td>
-                <td class="highlight"><span class="check">✓</span></td>
-                <td><span class="x">✗</span> $3/mo premium</td>
-                <td><span class="check">✓</span></td>
-                <td><span class="x">✗</span> $36/yr premium</td>
-              </tr>
-              <tr>
-                <td>No account required</td>
-                <td class="highlight"><span class="check">✓</span></td>
-                <td><span class="x">✗</span> Email required</td>
-                <td><span class="check">✓</span></td>
-                <td><span class="x">✗</span> Email required</td>
-              </tr>
-              <tr>
-                <td>No tracking or ads</td>
-                <td class="highlight"><span class="check">✓</span></td>
-                <td><span class="x">✗</span> Tracks usage</td>
-                <td><span class="x">✗</span> Ad-supported</td>
-                <td><span class="x">✗</span> Tracks + ads</td>
-              </tr>
-              <tr>
-                <td>Works offline</td>
-                <td class="highlight"><span class="check">✓</span></td>
-                <td><span class="x">✗</span></td>
-                <td><span class="x">✗</span></td>
-                <td><span class="partial">~</span> Premium only</td>
-              </tr>
-              <tr>
-                <td>Spaced repetition</td>
-                <td class="highlight"><span class="check">✓</span></td>
-                <td><span class="check">✓</span></td>
-                <td><span class="x">✗</span></td>
-                <td><span class="check">✓</span></td>
-              </tr>
-              <tr>
-                <td>Audio pronunciation</td>
-                <td class="highlight"><span class="check">✓</span></td>
-                <td><span class="check">✓</span></td>
-                <td><span class="check">✓</span></td>
-                <td><span class="partial">~</span> User-created</td>
-              </tr>
-              <tr>
-                <td>Word etymology</td>
-                <td class="highlight"><span class="check">✓</span></td>
-                <td><span class="partial">~</span> Limited</td>
-                <td><span class="check">✓</span></td>
-                <td><span class="x">✗</span></td>
-              </tr>
-              <tr>
-                <td>Challenge modes</td>
-                <td class="highlight"><span class="check">✓</span> 3 types</td>
-                <td><span class="check">✓</span></td>
-                <td><span class="x">✗</span></td>
-                <td><span class="check">✓</span></td>
-              </tr>
-              <tr>
-                <td>Export data (CSV)</td>
-                <td class="highlight"><span class="check">✓</span></td>
-                <td><span class="x">✗</span></td>
-                <td><span class="x">✗</span></td>
-                <td><span class="partial">~</span> Limited</td>
-              </tr>
-              <tr>
-                <td>Streak protection</td>
-                <td class="highlight"><span class="check">✓</span> Free</td>
-                <td><span class="x">✗</span></td>
-                <td><span class="x">✗</span></td>
-                <td><span class="x">✗</span></td>
-              </tr>
-              <tr>
-                <td>Open source</td>
-                <td class="highlight"><span class="check">✓</span></td>
-                <td><span class="x">✗</span></td>
-                <td><span class="x">✗</span></td>
-                <td><span class="x">✗</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        
-        <p class="comparison-note">
-          <span class="check">✓</span> = Yes &nbsp;&nbsp;
-          <span class="partial">~</span> = Partial/Limited &nbsp;&nbsp;
-          <span class="x">✗</span> = No
-        </p>
-      </div>
-    </section>
-
-    <!-- Accessibility -->
-    <section class="accessibility-section">
-      <div class="accessibility-container">
-        <div class="section-header">
-          <span class="section-number">♿</span>
-          <h2 class="section-title">Built for everyone</h2>
-        </div>
-        
-        <div class="accessibility-grid">
-          <div class="a11y-item">
-            <span class="a11y-icon">⌨️</span>
-            <div>
-              <strong>Full keyboard navigation</strong>
-              <p>Every feature accessible via keyboard shortcuts. No mouse required.</p>
-            </div>
-          </div>
-          <div class="a11y-item">
-            <span class="a11y-icon">🔊</span>
-            <div>
-              <strong>Screen reader friendly</strong>
-              <p>Semantic HTML and ARIA labels for assistive technology.</p>
-            </div>
-          </div>
-          <div class="a11y-item">
-            <span class="a11y-icon">👁️</span>
-            <div>
-              <strong>High contrast themes</strong>
-              <p>Light, dark, and sepia modes with readable color ratios.</p>
-            </div>
-          </div>
-          <div class="a11y-item">
-            <span class="a11y-icon">🎬</span>
-            <div>
-              <strong>Respects reduced motion</strong>
-              <p>Animations disabled when system prefers reduced motion.</p>
-            </div>
-          </div>
-          <div class="a11y-item">
-            <span class="a11y-icon">🎯</span>
-            <div>
-              <strong>Visible focus states</strong>
-              <p>Clear focus indicators for keyboard navigation.</p>
-            </div>
-          </div>
-          <div class="a11y-item">
-            <span class="a11y-icon">💬</span>
-            <div>
-              <strong>Audio pronunciation</strong>
-              <p>Hear words spoken aloud if reading is difficult.</p>
-            </div>
-          </div>
-        </div>
-        
-        <p class="a11y-note">
-          Accessibility isn't an afterthought. Have suggestions? 
-          <a href="https://github.com/draphael123/vocab-assistant/issues" target="_blank">Open an issue on GitHub</a>.
-        </p>
-      </div>
-    </section>
-
-    <!-- Testimonials -->
-    <section class="testimonials-section">
-      <div class="testimonials-container">
-        <div class="section-header">
-          <span class="section-number">07</span>
-          <h2 class="section-title">What people say</h2>
-        </div>
-        
-        <div class="testimonials-grid">
-          <blockquote class="testimonial">
-            <p>"I've learned more words in 2 weeks than I did studying vocabulary lists for the SAT. The daily habit makes all the difference."</p>
-            <cite>— Sarah, College Student</cite>
-          </blockquote>
-          <blockquote class="testimonial">
-            <p>"Finally, a vocabulary app that doesn't try to sell me something every 5 seconds. Just words. That's all I wanted."</p>
-            <cite>— Marcus, Software Engineer</cite>
-          </blockquote>
-          <blockquote class="testimonial">
-            <p>"The etymology feature is brilliant. Understanding where words come from helps me remember them and use them correctly."</p>
-            <cite>— Elena, Writer</cite>
-          </blockquote>
-        </div>
-      </div>
-    </section>
-
-    <!-- Week Preview -->
-    <section class="week-section">
-      <div class="week-container">
-        <div class="section-header">
-          <span class="section-number">08</span>
-          <h2 class="section-title">Your week in words</h2>
-        </div>
-        <p class="week-intro">Here's what a typical week looks like. One word per day, zero overwhelm.</p>
-        
-        <div class="week-grid">
-          <div class="day-card">
-            <span class="day-name">Mon</span>
-            <span class="day-word">Ephemeral</span>
-            <span class="day-meaning">short-lived</span>
-          </div>
-          <div class="day-card">
-            <span class="day-name">Tue</span>
-            <span class="day-word">Sanguine</span>
-            <span class="day-meaning">optimistic</span>
-          </div>
-          <div class="day-card">
-            <span class="day-name">Wed</span>
-            <span class="day-word">Ubiquitous</span>
-            <span class="day-meaning">everywhere</span>
-          </div>
-          <div class="day-card">
-            <span class="day-name">Thu</span>
-            <span class="day-word">Laconic</span>
-            <span class="day-meaning">brief</span>
-          </div>
-          <div class="day-card">
-            <span class="day-name">Fri</span>
-            <span class="day-word">Ebullient</span>
-            <span class="day-meaning">enthusiastic</span>
-          </div>
-          <div class="day-card">
-            <span class="day-name">Sat</span>
-            <span class="day-word">Serendipity</span>
-            <span class="day-meaning">happy chance</span>
-          </div>
-          <div class="day-card">
-            <span class="day-name">Sun</span>
-            <span class="day-word">Quotidian</span>
-            <span class="day-meaning">everyday</span>
-          </div>
-        </div>
-        
-        <p class="week-note">→ 52 weeks × 7 words = 365 new words in your vocabulary</p>
-      </div>
-    </section>
-
-    <!-- Features -->
-    <section class="features-section" id="features">
-      <div class="section-header">
-        <span class="section-number">09</span>
-        <h2 class="section-title">All the features</h2>
-      </div>
-      <p class="features-intro">Everything you need to build a powerful vocabulary, nothing you don't.</p>
-      
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🔊</div>
-          <div class="feature-title">Audio Pronunciation</div>
-          <p class="feature-text">Hear each word spoken aloud for better retention.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📚</div>
-          <div class="feature-title">Word Origins</div>
-          <p class="feature-text">Etymology for every word makes them stick.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🔄</div>
-          <div class="feature-title">Spaced Repetition</div>
-          <p class="feature-text">Smart review reminders using the Leitner system.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📅</div>
-          <div class="feature-title">Progress Calendar</div>
-          <p class="feature-text">GitHub-style heatmap for your learning streak.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🖱️</div>
-          <div class="feature-title">Right-Click Lookup</div>
-          <p class="feature-text">Select any word on the web to look it up.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <div class="feature-title">Weekly Quiz</div>
-          <p class="feature-text">Quick 7-question review, no pressure.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📤</div>
-          <div class="feature-title">Share Cards</div>
-          <p class="feature-text">Generate beautiful cards for social media.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">⌨️</div>
-          <div class="feature-title">Keyboard Shortcuts</div>
-          <p class="feature-text">N for new, L to listen, S to skip.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📥</div>
-          <div class="feature-title">CSV Export</div>
-          <p class="feature-text">Download vocabulary for Anki or flashcards.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🔔</div>
-          <div class="feature-title">Morning Reminders</div>
-          <p class="feature-text">Optional 9 AM notification to stay on track.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🎯</div>
-          <div class="feature-title">Difficulty Levels</div>
-          <p class="feature-text">Choose Everyday, SAT, GRE, or Obscure.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🌙</div>
-          <div class="feature-title">Three Themes</div>
-          <p class="feature-text">Light, dark, and sepia modes.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🎉</div>
-          <div class="feature-title">Confetti Celebrations</div>
-          <p class="feature-text">Hit milestones with satisfying confetti bursts.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">⚡</div>
-          <div class="feature-title">Challenge Mode</div>
-          <p class="feature-text">Speed rounds, reverse quizzes, fill-in-the-blank.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🧊</div>
-          <div class="feature-title">Streak Freeze</div>
-          <p class="feature-text">One free pass per week to protect your streak.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">⭐</div>
-          <div class="feature-title">Word Mastery</div>
-          <p class="feature-text">5-star system tracks your progress with each word.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📝</div>
-          <div class="feature-title">Personal Notes</div>
-          <p class="feature-text">Add your own mnemonics and notes to words.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">💡</div>
-          <div class="feature-title">Sentence Hints</div>
-          <p class="feature-text">Stuck? Get starter templates to help you write.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Before/After -->
-    <section class="compare-section">
-      <div class="compare-container">
-        <div class="compare-header">
-          <span class="section-number">10</span>
-          <h2 class="section-title">The transformation</h2>
-        </div>
-        
-        <div class="compare-grid">
-          <div class="compare-box before">
-            <div class="compare-label">Week 1</div>
-            <p>"That movie was <span>good</span>."</p>
-            <p>"The situation is <span>bad</span>."</p>
-            <p>"She's very <span>smart</span>."</p>
-          </div>
-          
-          <div class="compare-arrow">→</div>
-          
-          <div class="compare-box after">
-            <div class="compare-label">Week 12</div>
-            <p>"That movie was <span>sublime</span>."</p>
-            <p>"The situation is <span>untenable</span>."</p>
-            <p>"She's remarkably <span>perspicacious</span>."</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Changelog -->
-    <section class="changelog-section" id="changelog">
-      <div class="changelog-container">
-        <div class="section-header">
-          <span class="section-number">11</span>
-          <h2 class="section-title">Changelog</h2>
-        </div>
-        <p class="changelog-intro">What's new and improved.</p>
-        
-        <div class="changelog-list">
-          <div class="changelog-item latest">
-            <div class="changelog-version">
-              <span class="version-tag">v2.0.0</span>
-              <span class="version-date">Jan 2026</span>
-              <span class="version-badge">Latest</span>
-            </div>
-            <div class="changelog-content">
-              <h4>Major Feature Release</h4>
-              <ul>
-                <li><strong>Challenge Mode</strong> — 3 game types: Speed Round (60s), Reverse Quiz, Fill-in-the-Blank</li>
-                <li><strong>Confetti Celebrations</strong> — Milestone celebrations at 10, 25, 50, 100+ words</li>
-                <li><strong>Sound Effects</strong> — Audio feedback with toggle to mute</li>
-                <li><strong>Streak Freeze</strong> — One free pass per week saves your streak</li>
-                <li><strong>Word Mastery</strong> — 5-star system tracks progress per word</li>
-                <li><strong>Personal Notes</strong> — Add your own mnemonics to each word</li>
-                <li><strong>Sentence Hints</strong> — Template suggestions when you're stuck</li>
-                <li><strong>Word History</strong> — Timestamped log of all words viewed/learned</li>
-                <li><strong>Card Animations</strong> — Flip animation when getting new words</li>
-                <li><strong>200+ Words</strong> — Expanded vocabulary with multiple examples per word</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div class="changelog-item">
-            <div class="changelog-version">
-              <span class="version-tag">v1.1.0</span>
-              <span class="version-date">Jan 2026</span>
-            </div>
-            <div class="changelog-content">
-              <h4>Feature Update</h4>
-              <ul>
-                <li>Progress calendar with GitHub-style heatmap</li>
-                <li>Spaced repetition reminders</li>
-                <li>Right-click word lookup on any webpage</li>
-                <li>Share card generator for social media</li>
-                <li>Category filters (8 categories)</li>
-                <li>Browser notification reminders</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div class="changelog-item">
-            <div class="changelog-version">
-              <span class="version-tag">v1.0.0</span>
-              <span class="version-date">Dec 2025</span>
-            </div>
-            <div class="changelog-content">
-              <h4>Initial Release</h4>
-              <ul>
-                <li>Daily word with definition and etymology</li>
-                <li>Sentence practice with validation</li>
-                <li>Streak tracking and stats</li>
-                <li>Word bank with favorites</li>
-                <li>Weekly quiz review</li>
-                <li>CSV export</li>
-                <li>Light, dark, and sepia themes</li>
-                <li>Keyboard shortcuts</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section class="faq-section" id="faq">
-      <div class="section-header">
-        <span class="section-number">12</span>
-        <h2 class="section-title">Questions</h2>
-      </div>
-      
-      <div class="faq-list">
-        <details class="faq-item">
-          <summary>Is it really free?</summary>
-          <p>Yes. No trials, no premium tier, no hidden costs. The code is open source—you can verify this yourself on GitHub.</p>
-        </details>
-        
-        <details class="faq-item">
-          <summary>How do I install it?</summary>
-          <p>Download the ZIP, unzip it, go to chrome://extensions, enable "Developer mode", click "Load unpacked", and select the unzipped folder. That's it!</p>
-        </details>
-        
-        <details class="faq-item">
-          <summary>Do I need to create an account?</summary>
-          <p>No. Your progress is stored locally in your browser. No email, no password, no "verify your account" emails.</p>
-        </details>
-        
-        <details class="faq-item">
-          <summary>How are the words selected?</summary>
-          <p>200+ carefully curated SAT/GRE level words across 8 categories. Each includes etymology, synonyms, antonyms, and multiple example sentences.</p>
-        </details>
-        
-        <details class="faq-item">
-          <summary>Does it track me?</summary>
-          <p>No. Zero analytics. Zero tracking. Works entirely offline. Your vocabulary journey is completely private.</p>
-        </details>
-        
-        <details class="faq-item">
-          <summary>Can I use it for SAT/GRE prep?</summary>
-          <p>Absolutely. Set the difficulty to SAT or GRE and export your learned words as CSV for additional study.</p>
-        </details>
-      </div>
-    </section>
-
-    <!-- CTA -->
-    <section class="cta-section" id="download">
-      <div class="cta-content">
-        <h2 class="cta-title">Ready to expand your vocabulary?</h2>
-        <p class="cta-subtitle">Download the extension and start learning today.</p>
-        
-        <a href="word-of-the-day-extension.zip" download class="cta-button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Download Free Extension
-        </a>
-        
-        <p class="cta-note">ZIP file • v2.0.0 • Works on Chrome, Edge, Brave, Arc</p>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="footer-brand">Word of the Day <span class="version">v2.0.0</span></div>
-    <div class="footer-links">
-      <a href="#">Privacy</a>
-      <a href="https://github.com/draphael123/vocab-assistant" target="_blank">GitHub</a>
     </div>
   </footer>
 
   <script>
-    // Theme toggle
-    const themeToggle = document.getElementById('themeToggle');
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    // Set today's date
+    const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+    document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', options).toUpperCase();
     
-    if (savedTheme === 'dark') {
-      document.body.setAttribute('data-theme', 'dark');
-      themeToggle.textContent = '☀️';
+    // Speak word function
+    function speakWord(word) {
+      const utterance = new SpeechSynthesisUtterance(word);
+      utterance.rate = 0.8;
+      speechSynthesis.speak(utterance);
     }
     
-    themeToggle.addEventListener('click', () => {
-      const isDark = document.body.getAttribute('data-theme') === 'dark';
-      if (isDark) {
-        document.body.removeAttribute('data-theme');
-        themeToggle.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
-      } else {
-        document.body.setAttribute('data-theme', 'dark');
-        themeToggle.textContent = '☀️';
-        localStorage.setItem('theme', 'dark');
-      }
-    });
-    
-    // Word carousel
-    const words = [
-      { word: "Ephemeral", pronunciation: "/ɪˈfem(ə)rəl/", definition: "lasting for a very short time; transient", origin: "Greek 'ephemeros' — lasting only a day" },
-      { word: "Sanguine", pronunciation: "/ˈsaNG(ɡ)wən/", definition: "optimistic, especially in a difficult situation", origin: "Latin 'sanguineus' — of blood" },
-      { word: "Ubiquitous", pronunciation: "/yo͞oˈbikwədəs/", definition: "present, appearing, or found everywhere", origin: "Latin 'ubique' — everywhere" },
-      { word: "Laconic", pronunciation: "/ləˈkänik/", definition: "using very few words; concise", origin: "Greek 'Lakonikos' — Spartan" },
-      { word: "Serendipity", pronunciation: "/ˌserənˈdipədē/", definition: "the occurrence of events by chance in a happy way", origin: "Coined by Horace Walpole in 1754" },
-    ];
-    
-    let wordIndex = 0;
-    
-    function rotateWord() {
-      wordIndex = (wordIndex + 1) % words.length;
-      const w = words[wordIndex];
+    // Create floating particles
+    function createParticles() {
+      const container = document.getElementById('particles');
+      const colors = ['#ff6b4a', '#ff9f43', '#54a0ff', '#5f27cd', '#00d2d3', '#ff6b9d'];
       
-      document.getElementById('carouselWord').textContent = w.word;
-      document.getElementById('carouselPronunciation').textContent = w.pronunciation;
-      document.getElementById('carouselDefinition').textContent = w.definition;
-      document.getElementById('carouselOrigin').textContent = w.origin;
+      for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.width = (Math.random() * 4 + 2) + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+        container.appendChild(particle);
+      }
     }
     
-    setInterval(rotateWord, 4000);
-    
-    // Typing animation
-    const phrases = [
-      "Social media fame is ephemeral.",
-      "She remained sanguine despite setbacks.",
-      "Smartphones are now ubiquitous."
-    ];
-    
-    let phraseIndex = 0;
-    let charIndex = 0;
-    let isDeleting = false;
-    let isPaused = false;
-    
-    const typedText = document.getElementById('typedText');
-    const demoInput = document.getElementById('demoInput');
-    const demoSuccess = document.getElementById('demoSuccess');
-    
-    function typeDemo() {
-      const currentPhrase = phrases[phraseIndex];
-      
-      if (isPaused) {
-        setTimeout(typeDemo, 2000);
-        isPaused = false;
-        isDeleting = true;
-        return;
-      }
-      
-      if (isDeleting) {
-        typedText.textContent = currentPhrase.substring(0, charIndex - 1);
-        charIndex--;
-        
-        if (charIndex === 0) {
-          isDeleting = false;
-          phraseIndex = (phraseIndex + 1) % phrases.length;
-          demoSuccess.classList.add('hidden');
-          demoInput.style.display = 'block';
-        }
-      } else {
-        typedText.textContent = currentPhrase.substring(0, charIndex + 1);
-        charIndex++;
-        
-        if (charIndex === currentPhrase.length) {
-          isPaused = true;
-          demoInput.style.display = 'none';
-          demoSuccess.classList.remove('hidden');
-        }
-      }
-      
-      const speed = isDeleting ? 25 : 45 + Math.random() * 40;
-      setTimeout(typeDemo, speed);
-    }
-    
-    setTimeout(typeDemo, 1200);
-    
-    // Generate mock calendar
-    const calendarGrid = document.getElementById('mockCalendar');
-    for (let i = 0; i < 91; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'calendar-cell';
-      
-      // Create a pattern that shows increasing activity
-      const week = Math.floor(i / 7);
-      const random = Math.random();
-      
-      if (i < 7) {
-        cell.classList.add(random > 0.3 ? 'l1' : 'l0');
-      } else if (i < 30) {
-        cell.classList.add(random > 0.2 ? (random > 0.6 ? 'l2' : 'l1') : 'l0');
-      } else {
-        cell.classList.add(random > 0.1 ? (random > 0.5 ? 'l3' : 'l2') : 'l1');
-      }
-      
-      calendarGrid.appendChild(cell);
-    }
+    createParticles();
   </script>
 </body>
 </html>
