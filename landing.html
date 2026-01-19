@@ -8,6 +8,9 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
 </head>
 <body>
+  <!-- Animated background -->
+  <div class="bg-gradient"></div>
+
   <nav class="nav">
     <a href="#" class="nav-logo">WOTD</a>
     <div class="nav-links">
@@ -15,14 +18,21 @@
       <a href="#faq">FAQ</a>
       <a href="https://github.com/draphael123/vocab-assistant" target="_blank">Source</a>
     </div>
-    <a href="#download" class="nav-cta">Get Extension</a>
+    <div class="nav-right">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+      <a href="#download" class="nav-cta">Get Extension</a>
+    </div>
   </nav>
 
   <main>
     <!-- Hero -->
     <section class="hero">
       <div class="hero-content">
-        <div class="hero-badge">Chrome Extension • Free Forever</div>
+        <div class="hero-badge">
+          <span>Chrome Extension</span>
+          <span>•</span>
+          <span>Free Forever</span>
+        </div>
         
         <h1>
           Learn one word<br>
@@ -53,7 +63,13 @@
 
       <div class="hero-visual">
         <div class="demo-wrapper">
+          <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+          </div>
           <div class="demo-card">
+            <span class="demo-tag">PREVIEW</span>
             <div class="demo-day">Monday, Jan 19</div>
             <div class="demo-word">Ephemeral</div>
             <div class="demo-pronunciation">/ɪˈfem(ə)rəl/</div>
@@ -69,7 +85,6 @@
               ✓ Word learned! Streak: 7 days
             </div>
           </div>
-          <div class="demo-float">Extension Preview</div>
         </div>
       </div>
     </section>
@@ -131,67 +146,68 @@
         <span class="section-number">02</span>
         <h2 class="section-title">What's included</h2>
       </div>
+      <p class="features-intro">Everything you need to build a powerful vocabulary, nothing you don't.</p>
       
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">🔊</div>
           <div class="feature-title">Audio Pronunciation</div>
-          <p class="feature-text">Hear each word spoken aloud. Helps with retention and proper usage.</p>
+          <p class="feature-text">Hear each word spoken aloud for better retention.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📚</div>
           <div class="feature-title">Word Origins</div>
-          <p class="feature-text">Etymology for every word. Understanding roots makes words stick.</p>
+          <p class="feature-text">Etymology for every word makes them stick.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🔄</div>
           <div class="feature-title">Spaced Repetition</div>
-          <p class="feature-text">Smart review reminders based on the Leitner system.</p>
+          <p class="feature-text">Smart review reminders using the Leitner system.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📅</div>
           <div class="feature-title">Progress Calendar</div>
-          <p class="feature-text">GitHub-style heatmap. Watch your learning streak grow.</p>
+          <p class="feature-text">GitHub-style heatmap for your learning streak.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🖱️</div>
           <div class="feature-title">Right-Click Lookup</div>
-          <p class="feature-text">Select any word on the web. Look it up instantly.</p>
+          <p class="feature-text">Select any word on the web to look it up.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📊</div>
           <div class="feature-title">Weekly Quiz</div>
-          <p class="feature-text">Quick 7-question review. No pressure, just practice.</p>
+          <p class="feature-text">Quick 7-question review, no pressure.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📤</div>
           <div class="feature-title">Share Cards</div>
-          <p class="feature-text">Generate beautiful cards to share your favorite words.</p>
+          <p class="feature-text">Generate beautiful cards for social media.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⌨️</div>
           <div class="feature-title">Keyboard Shortcuts</div>
-          <p class="feature-text">N for new, L for listen, S for skip. Power user friendly.</p>
+          <p class="feature-text">N for new, L to listen, S to skip.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📥</div>
           <div class="feature-title">CSV Export</div>
-          <p class="feature-text">Download your vocabulary. Import into Anki or flashcards.</p>
+          <p class="feature-text">Download vocabulary for Anki or flashcards.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🔔</div>
           <div class="feature-title">Morning Reminders</div>
-          <p class="feature-text">Optional 9 AM notification. Never miss your daily word.</p>
+          <p class="feature-text">Optional 9 AM notification to stay on track.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🎯</div>
           <div class="feature-title">Difficulty Levels</div>
-          <p class="feature-text">Choose from Everyday, SAT, GRE, or Obscure vocabulary.</p>
+          <p class="feature-text">Choose Everyday, SAT, GRE, or Obscure.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🌙</div>
           <div class="feature-title">Three Themes</div>
-          <p class="feature-text">Light, dark, and sepia. Easy on the eyes any time.</p>
+          <p class="feature-text">Light, dark, and sepia modes.</p>
         </div>
       </div>
     </section>
@@ -266,17 +282,19 @@
 
     <!-- CTA -->
     <section class="cta-section" id="download">
-      <h2 class="cta-title">Start learning today</h2>
-      <p class="cta-subtitle">Free • No account • No tracking</p>
-      
-      <a href="#" class="cta-button">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-        </svg>
-        Add to Chrome
-      </a>
-      
-      <p class="cta-note">Works on Chrome, Edge, Brave, Arc, and other Chromium browsers</p>
+      <div class="cta-content">
+        <h2 class="cta-title">Start learning today</h2>
+        <p class="cta-subtitle">Free • No account • No tracking</p>
+        
+        <a href="#" class="cta-button">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          Add to Chrome
+        </a>
+        
+        <p class="cta-note">Works on Chrome, Edge, Brave, Arc, and other Chromium browsers</p>
+      </div>
     </section>
   </main>
 
@@ -289,6 +307,28 @@
   </footer>
 
   <script>
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    
+    if (savedTheme === 'dark') {
+      document.body.setAttribute('data-theme', 'dark');
+      themeToggle.textContent = '☀️';
+    }
+    
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        document.body.removeAttribute('data-theme');
+        themeToggle.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.body.setAttribute('data-theme', 'dark');
+        themeToggle.textContent = '☀️';
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+    
     // Typing animation
     const phrases = [
       "Social media fame is ephemeral.",
