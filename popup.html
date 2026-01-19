@@ -8,6 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body data-theme="light">
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
   <!-- Onboarding Overlay -->
   <div class="onboarding-overlay hidden" id="onboarding">
     <div class="onboarding-card">
@@ -33,6 +36,9 @@
         <span class="date" id="todayDate"></span>
       </div>
       <div class="header-right">
+        <button class="icon-btn" id="soundToggle" title="Toggle sounds">
+          <span id="soundIcon">🔊</span>
+        </button>
         <button class="icon-btn" id="themeToggle" title="Toggle theme (T)">
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -49,6 +55,12 @@
       </div>
     </header>
 
+    <!-- Streak Freeze Banner -->
+    <div class="freeze-banner hidden" id="freezeBanner">
+      <span class="freeze-icon">🧊</span>
+      <span class="freeze-text">Streak saved by freeze! <span id="freezesLeft">0</span> left this week.</span>
+    </div>
+
     <!-- Spaced Repetition Banner -->
     <div class="sr-banner hidden" id="srBanner">
       <span class="sr-icon">🔄</span>
@@ -58,7 +70,12 @@
 
     <!-- Word Card -->
     <main class="word-section">
-      <div class="word-card">
+      <div class="word-card" id="wordCard">
+        <!-- Mastery Badge -->
+        <div class="mastery-badge" id="masteryBadge" title="Word mastery level">
+          <span class="mastery-stars" id="masteryStars">☆☆☆☆☆</span>
+        </div>
+
         <!-- Difficulty & Category Badges -->
         <div class="badges-row">
           <span class="difficulty-badge" id="difficultyBadge">SAT</span>
@@ -89,10 +106,10 @@
           <span class="etymology-text" id="etymology"></span>
         </div>
         
-        <!-- Example -->
-        <div class="example-box">
-          <span class="example-label">Example</span>
-          <p class="example" id="example"></p>
+        <!-- Examples (Multiple) -->
+        <div class="examples-section" id="examplesSection">
+          <span class="example-label">Examples</span>
+          <div class="examples-list" id="examplesList"></div>
         </div>
         
         <!-- Synonyms & Antonyms -->
@@ -104,6 +121,18 @@
           <div class="relation-group">
             <span class="relation-label">Opposite</span>
             <div class="relation-tags" id="antonyms"></div>
+          </div>
+        </div>
+
+        <!-- Personal Notes -->
+        <div class="notes-section">
+          <button class="notes-toggle" id="notesToggle">
+            <span>📝</span> My Notes
+            <span class="notes-indicator hidden" id="notesIndicator">•</span>
+          </button>
+          <div class="notes-input hidden" id="notesInput">
+            <textarea id="personalNotes" placeholder="Add your own mnemonic or note..."></textarea>
+            <button class="notes-save" id="notesSave">Save</button>
           </div>
         </div>
       </div>
@@ -124,7 +153,16 @@
         placeholder="Type your sentence here..."
         rows="2"
       ></textarea>
+      
+      <!-- Hint Section -->
+      <div class="hint-section hidden" id="hintSection">
+        <p class="hint-text" id="hintText"></p>
+      </div>
+      
       <div class="practice-actions">
+        <button class="hint-btn" id="hintBtn" title="Get a hint">
+          <span>💡</span>
+        </button>
         <button class="check-btn" id="checkBtn">
           <span>Check</span>
           <kbd>Enter</kbd>
@@ -164,11 +202,17 @@
         </div>
       </div>
       <div class="footer-actions">
-        <button class="footer-btn" id="calendarBtn" title="Progress Calendar (C)">
+        <button class="footer-btn" id="historyBtn" title="Word History (H)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
-          <span>Calendar</span>
+          <span>History</span>
+        </button>
+        <button class="footer-btn" id="challengeBtn" title="Challenge Mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span>Challenge</span>
         </button>
         <button class="footer-btn" id="quizBtn" title="Weekly Quiz (Q)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -182,14 +226,74 @@
           </svg>
           <span>Bank</span>
         </button>
-        <button class="footer-btn" id="newWordBtn" title="New Word (N)">
+        <button class="footer-btn" id="calendarBtn" title="Progress Calendar (C)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
-          <span>New</span>
+          <span>Calendar</span>
         </button>
       </div>
     </footer>
+  </div>
+
+  <!-- History View -->
+  <div class="container history-view hidden" id="historyView">
+    <header class="view-header">
+      <button class="back-btn" id="historyBackBtn">← Back</button>
+      <span class="view-title">Word History</span>
+      <span></span>
+    </header>
+    <div class="history-list" id="historyList">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+
+  <!-- Challenge Mode View -->
+  <div class="container challenge-view hidden" id="challengeView">
+    <header class="view-header">
+      <button class="back-btn" id="challengeBackBtn">← Back</button>
+      <span class="view-title">Challenge Mode</span>
+      <span class="challenge-timer" id="challengeTimer">60</span>
+    </header>
+    
+    <div class="challenge-select" id="challengeSelect">
+      <h3>Choose your challenge</h3>
+      <div class="challenge-options">
+        <button class="challenge-option" data-mode="speed">
+          <span class="challenge-icon">⚡</span>
+          <span class="challenge-name">Speed Round</span>
+          <span class="challenge-desc">Define 10 words in 60 seconds</span>
+        </button>
+        <button class="challenge-option" data-mode="reverse">
+          <span class="challenge-icon">🔄</span>
+          <span class="challenge-name">Reverse Quiz</span>
+          <span class="challenge-desc">Type the word from its definition</span>
+        </button>
+        <button class="challenge-option" data-mode="fillblank">
+          <span class="challenge-icon">📝</span>
+          <span class="challenge-name">Fill in the Blank</span>
+          <span class="challenge-desc">Complete sentences with the right word</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="challenge-game hidden" id="challengeGame">
+      <div class="challenge-progress">
+        <span id="challengeProgress">1/10</span>
+        <div class="challenge-bar"><div class="challenge-bar-fill" id="challengeBarFill"></div></div>
+      </div>
+      <div class="challenge-question" id="challengeQuestion"></div>
+      <input type="text" class="challenge-input" id="challengeInput" placeholder="Type your answer..." autocomplete="off">
+      <div class="challenge-options-grid" id="challengeOptionsGrid"></div>
+      <div class="challenge-feedback" id="challengeFeedback"></div>
+    </div>
+    
+    <div class="challenge-result hidden" id="challengeResult">
+      <span class="challenge-score" id="challengeScore">8/10</span>
+      <p class="challenge-message" id="challengeMessage">Great job!</p>
+      <p class="challenge-time" id="challengeTime">Time: 45s</p>
+      <button class="btn-primary" id="challengeDoneBtn">Done</button>
+    </div>
   </div>
 
   <!-- Calendar View -->
@@ -209,9 +313,7 @@
         <span class="cal-stat-label">This Month</span>
       </div>
     </div>
-    <div class="calendar-grid" id="calendarGrid">
-      <!-- Generated by JS -->
-    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
     <div class="calendar-legend">
       <span class="legend-item"><span class="legend-box empty"></span> No activity</span>
       <span class="legend-item"><span class="legend-box light"></span> 1 word</span>
@@ -252,10 +354,9 @@
     <div class="bank-filters">
       <button class="filter-btn active" data-filter="all">All</button>
       <button class="filter-btn" data-filter="favorites">⭐ Favorites</button>
+      <button class="filter-btn" data-filter="mastered">🏆 Mastered</button>
     </div>
-    <div class="category-filters" id="categoryFilters">
-      <!-- Generated by JS -->
-    </div>
+    <div class="category-filters" id="categoryFilters"></div>
     <div class="bank-list" id="bankList"></div>
     <div class="bank-empty hidden" id="bankEmpty">
       <p>No words yet. Start learning!</p>
@@ -281,9 +382,7 @@
       </div>
       <div class="setting-group">
         <label class="setting-label">Word Categories</label>
-        <div class="setting-options category-toggles" id="categoryToggles">
-          <!-- Generated by JS -->
-        </div>
+        <div class="setting-options category-toggles" id="categoryToggles"></div>
       </div>
       <div class="setting-group">
         <label class="setting-label">Theme</label>
@@ -291,6 +390,15 @@
           <button class="setting-btn theme-btn" data-theme="light">Light</button>
           <button class="setting-btn theme-btn" data-theme="dark">Dark</button>
           <button class="setting-btn theme-btn" data-theme="sepia">Sepia</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label class="setting-label">Sound Effects</label>
+        <div class="setting-toggle">
+          <span>Play sounds for actions</span>
+          <button class="toggle-btn" id="soundEffectsToggle">
+            <span class="toggle-slider"></span>
+          </button>
         </div>
       </div>
       <div class="setting-group">
@@ -303,6 +411,13 @@
         </div>
       </div>
       <div class="setting-group">
+        <label class="setting-label">Streak Freeze</label>
+        <div class="freeze-info">
+          <span>🧊 <span id="freezeCount">1</span> freeze available this week</span>
+          <p class="freeze-desc">Automatically saves your streak if you miss a day</p>
+        </div>
+      </div>
+      <div class="setting-group">
         <label class="setting-label">Keyboard Shortcuts</label>
         <div class="shortcuts-list">
           <div class="shortcut"><kbd>Enter</kbd> <span>Check sentence</span></div>
@@ -312,7 +427,7 @@
           <div class="shortcut"><kbd>T</kbd> <span>Toggle theme</span></div>
           <div class="shortcut"><kbd>Q</kbd> <span>Quiz</span></div>
           <div class="shortcut"><kbd>B</kbd> <span>Word bank</span></div>
-          <div class="shortcut"><kbd>C</kbd> <span>Calendar</span></div>
+          <div class="shortcut"><kbd>H</kbd> <span>History</span></div>
         </div>
       </div>
       <div class="setting-group">
