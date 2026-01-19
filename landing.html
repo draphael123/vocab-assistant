@@ -20,7 +20,7 @@
     </div>
     <div class="nav-right">
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
-      <a href="#download" class="nav-cta">Get Extension</a>
+      <a href="word-of-the-day-extension.zip" download class="nav-cta">Download Free</a>
     </div>
   </nav>
 
@@ -31,7 +31,7 @@
         <div class="hero-badge">
           <span>Chrome Extension</span>
           <span>•</span>
-          <span>Free Forever</span>
+          <span>100% Free</span>
         </div>
         
         <h1>
@@ -44,19 +44,46 @@
           A distraction-free vocabulary builder. No accounts, no subscriptions, 
           no dark patterns. Just you and a new word each morning.
         </p>
-        
-        <div class="hero-stats">
-          <div class="stat-item">
-            <span class="stat-number">150+</span>
-            <span class="stat-label">curated words</span>
+
+        <!-- Hero Download Button -->
+        <div class="hero-download">
+          <a href="word-of-the-day-extension.zip" download class="download-btn">
+            <span class="download-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </span>
+            <span class="download-text">
+              <strong>Download Extension</strong>
+              <small>Free • No account required</small>
+            </span>
+          </a>
+          <div class="download-meta">
+            <span>📦 ZIP file</span>
+            <span>•</span>
+            <span>Works on Chrome, Edge, Brave, Arc</span>
           </div>
-          <div class="stat-item">
-            <span class="stat-number">8</span>
-            <span class="stat-label">categories</span>
+        </div>
+
+        <!-- Install Instructions -->
+        <div class="install-steps">
+          <div class="step">
+            <span class="step-num">1</span>
+            <span>Download & unzip</span>
           </div>
-          <div class="stat-item">
-            <span class="stat-number">0</span>
-            <span class="stat-label">tracking</span>
+          <div class="step">
+            <span class="step-num">2</span>
+            <span>Go to chrome://extensions</span>
+          </div>
+          <div class="step">
+            <span class="step-num">3</span>
+            <span>Enable "Developer mode"</span>
+          </div>
+          <div class="step">
+            <span class="step-num">4</span>
+            <span>Click "Load unpacked"</span>
           </div>
         </div>
       </div>
@@ -85,6 +112,31 @@
               ✓ Word learned! Streak: 7 days
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="stats-bar">
+      <div class="stats-container">
+        <div class="stat-item">
+          <span class="stat-number">150+</span>
+          <span class="stat-label">Curated Words</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">8</span>
+          <span class="stat-label">Categories</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">0</span>
+          <span class="stat-label">Tracking</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">∞</span>
+          <span class="stat-label">Free Forever</span>
         </div>
       </div>
     </section>
@@ -254,6 +306,11 @@
         </details>
         
         <details class="faq-item">
+          <summary>How do I install it?</summary>
+          <p>Download the ZIP, unzip it, go to chrome://extensions, enable "Developer mode", click "Load unpacked", and select the unzipped folder. That's it!</p>
+        </details>
+        
+        <details class="faq-item">
           <summary>Do I need to create an account?</summary>
           <p>No. Your progress is stored locally in your browser. No email, no password, no "verify your account" emails.</p>
         </details>
@@ -261,11 +318,6 @@
         <details class="faq-item">
           <summary>How are the words selected?</summary>
           <p>150+ carefully curated SAT/GRE level words across 8 categories. Each includes etymology, synonyms, antonyms, and example sentences.</p>
-        </details>
-        
-        <details class="faq-item">
-          <summary>What if I miss a day?</summary>
-          <p>Nothing bad happens. No guilt trips, no "you broke your streak!" drama. Life happens. Come back when you can.</p>
         </details>
         
         <details class="faq-item">
@@ -283,17 +335,19 @@
     <!-- CTA -->
     <section class="cta-section" id="download">
       <div class="cta-content">
-        <h2 class="cta-title">Start learning today</h2>
-        <p class="cta-subtitle">Free • No account • No tracking</p>
+        <h2 class="cta-title">Ready to expand your vocabulary?</h2>
+        <p class="cta-subtitle">Download the extension and start learning today.</p>
         
-        <a href="#" class="cta-button">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        <a href="word-of-the-day-extension.zip" download class="cta-button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          Add to Chrome
+          Download Free Extension
         </a>
         
-        <p class="cta-note">Works on Chrome, Edge, Brave, Arc, and other Chromium browsers</p>
+        <p class="cta-note">ZIP file • Works on Chrome, Edge, Brave, Arc, and other Chromium browsers</p>
       </div>
     </section>
   </main>

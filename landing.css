@@ -281,21 +281,136 @@ body {
   margin-bottom: 40px;
 }
 
-.hero-stats {
+/* Hero Download Button */
+.hero-download {
+  margin-bottom: 32px;
+}
+
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 28px;
+  background: linear-gradient(135deg, var(--blue-500), var(--blue-600));
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 20px var(--glow);
+}
+
+.download-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px var(--glow);
+}
+
+.download-icon {
   display: flex;
-  gap: 48px;
-  padding-top: 32px;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.download-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.download-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.download-text strong {
+  font-family: 'Space Mono', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.download-text small {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.download-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Install Steps */
+.install-steps {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--blue-500);
+  color: white;
+  border-radius: 50%;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* Stats Bar */
+.stats-bar {
+  background: var(--bg-secondary);
   border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 40px 48px;
+}
+
+.stats-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 48px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .stat-number {
   font-family: 'Space Mono', monospace;
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   background: linear-gradient(135deg, var(--blue-400), var(--blue-600));
   -webkit-background-clip: text;
@@ -304,8 +419,10 @@ body {
 }
 
 .stat-label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* Demo Card */
@@ -954,8 +1071,12 @@ footer {
     align-items: center;
   }
   
-  .hero-stats {
+  .install-steps {
     justify-content: center;
+  }
+  
+  .stats-container {
+    gap: 24px;
   }
   
   .week-grid {
@@ -992,6 +1113,51 @@ footer {
   .demo-card {
     width: 100%;
     max-width: 340px;
+  }
+  
+  .download-btn {
+    padding: 14px 20px;
+  }
+  
+  .download-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .download-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .download-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .install-steps {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .step {
+    justify-content: flex-start;
+  }
+  
+  .stats-bar {
+    padding: 32px 24px;
+  }
+  
+  .stats-container {
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+  
+  .stat-divider {
+    display: none;
+  }
+  
+  .stat-item {
+    width: 40%;
   }
   
   .week-section,
