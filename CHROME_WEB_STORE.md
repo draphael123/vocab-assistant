@@ -90,3 +90,4 @@ https://github.com/draphael123/vocab-assistant/issues
 ## Privacy Policy
 This extension stores all data locally in your browser using Chrome's storage API. No personal data is collected, transmitted, or shared with any third parties. The extension does not require any accounts or sign-ups.
 
+

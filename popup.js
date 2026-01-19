@@ -956,6 +956,19 @@ async function loadStats() {
       if (result.vocabStats) {
         stats = { ...stats, ...result.vocabStats };
       }
+      
+      // Ensure critical arrays exist
+      if (!Array.isArray(stats.enabledCategories) || stats.enabledCategories.length === 0) {
+        stats.enabledCategories = ['general', 'business', 'literature', 'science', 'philosophy', 'law', 'medicine', 'arts'];
+      }
+      if (!Array.isArray(stats.learnedWords)) stats.learnedWords = [];
+      if (!Array.isArray(stats.skippedWords)) stats.skippedWords = [];
+      if (!Array.isArray(stats.favorites)) stats.favorites = [];
+      if (!Array.isArray(stats.achievements)) stats.achievements = [];
+      if (!stats.collections) stats.collections = { favorites: [] };
+      if (!stats.dailyGoal) stats.dailyGoal = 1;
+      if (!stats.pronunciationSpeed) stats.pronunciationSpeed = 0.8;
+      
       resolve();
     });
   });
@@ -998,8 +1011,15 @@ async function loadOrSetDailyWord() {
     chrome.storage.local.get(['dailyWord', 'dailyWordDate'], (result) => {
       const today = getTodayString();
       
-      if (result.dailyWord && result.dailyWordDate === today) {
+      // Validate that stored word has required properties
+      const isValidWord = result.dailyWord && 
+        result.dailyWord.word && 
+        result.dailyWord.definition &&
+        result.dailyWordDate === today;
+      
+      if (isValidWord) {
         currentWord = result.dailyWord;
+        console.log('Loaded stored word:', currentWord.word);
       } else {
         setNewWord();
         chrome.storage.local.set({ dailyWord: currentWord, dailyWordDate: today });
@@ -1010,18 +1030,38 @@ async function loadOrSetDailyWord() {
 }
 
 function setNewWord() {
+  // Ensure enabledCategories is valid
+  const categories = Array.isArray(stats.enabledCategories) && stats.enabledCategories.length > 0
+    ? stats.enabledCategories
+    : ['general', 'business', 'literature', 'science', 'philosophy', 'law', 'medicine', 'arts'];
+  
+  const difficulty = stats.difficulty || 2;
+  
   const availableWords = VOCABULARY.filter(w => 
-    w.difficulty <= stats.difficulty &&
-    stats.enabledCategories.includes(w.category) &&
+    w.difficulty <= difficulty &&
+    categories.includes(w.category) &&
     !stats.learnedWords.includes(w.word.toLowerCase()) &&
     !stats.skippedWords.includes(w.word.toLowerCase())
   );
   
-  const wordPool = availableWords.length > 0 ? availableWords : 
-    VOCABULARY.filter(w => w.difficulty <= stats.difficulty && stats.enabledCategories.includes(w.category));
+  let wordPool = availableWords;
+  
+  // If no available words, try without learned/skipped filter
+  if (wordPool.length === 0) {
+    wordPool = VOCABULARY.filter(w => 
+      w.difficulty <= difficulty && categories.includes(w.category)
+    );
+  }
+  
+  // If still no words, use all vocabulary
+  if (wordPool.length === 0) {
+    wordPool = VOCABULARY;
+  }
   
   const randomIndex = Math.floor(Math.random() * wordPool.length);
   currentWord = wordPool[randomIndex] || VOCABULARY[0];
+  
+  console.log('Word set:', currentWord?.word);
 }
 
 async function getNewWord() {
@@ -1454,65 +1494,6 @@ function updateDate() {
 function updateUI() {
   updateWordDisplay();
   updateStats();
-  updateMasteryDisplay();
-  updateNotesIndicator();
-}
-
-function updateWordDisplay() {
-  if (!currentWord) return;
-  
-  document.getElementById('currentWord').textContent = currentWord.word;
-  document.getElementById('partOfSpeech').textContent = currentWord.partOfSpeech;
-  document.getElementById('definition').textContent = currentWord.definition;
-  
-  // Badges
-  const diffLabels = { 1: 'Everyday', 2: 'SAT', 3: 'GRE', 4: 'Obscure' };
-  document.getElementById('difficultyBadge').textContent = diffLabels[currentWord.difficulty] || 'SAT';
-  document.getElementById('categoryBadge').textContent = currentWord.category || 'general';
-  
-  // Etymology
-  const etymSection = document.getElementById('etymologySection');
-  if (currentWord.etymology) {
-    etymSection.style.display = 'flex';
-    document.getElementById('etymology').textContent = currentWord.etymology;
-  } else {
-    etymSection.style.display = 'none';
-  }
-  
-  // Pronunciation
-  document.getElementById('pronunciation').textContent = generatePronunciation(currentWord.word);
-  
-  // Examples (multiple)
-  const examplesList = document.getElementById('examplesList');
-  examplesList.innerHTML = '';
-  
-  const examples = currentWord.examples || [currentWord.example];
-  examples.forEach((ex, i) => {
-    const p = document.createElement('p');
-    p.className = 'example-item';
-    p.textContent = ex;
-    if (i > 0) p.classList.add('secondary');
-    examplesList.appendChild(p);
-  });
-  
-  // Synonyms & Antonyms
-  const synonymsEl = document.getElementById('synonyms');
-  const antonymsEl = document.getElementById('antonyms');
-  synonymsEl.innerHTML = '';
-  antonymsEl.innerHTML = '';
-  
-  (currentWord.synonyms || []).slice(0, 3).forEach(syn => {
-    const span = document.createElement('span');
-    span.textContent = syn;
-    synonymsEl.appendChild(span);
-  });
-  
-  (currentWord.antonyms || []).slice(0, 3).forEach(ant => {
-    const span = document.createElement('span');
-    span.textContent = ant;
-    antonymsEl.appendChild(span);
-  });
-  
   updateMasteryDisplay();
   updateNotesIndicator();
 }
