@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word of the Day</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --surface: #ffffff;
+      --text: #1a1a18;
+      --text-muted: #6b6860;
+      --border: #e8e4dd;
+      --accent: #0ea5e9;
+      --accent-light: #e0f2fe;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --text: #e6edf3;
+        --text-muted: #8b949e;
+        --border: #30363d;
+        --accent: #58a6ff;
+        --accent-light: #1f3a5c;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .widget {
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .date {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 40px;
+    }
+
+    .word {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 72px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+      line-height: 1.1;
+    }
+
+    .pronunciation {
+      font-size: 18px;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-bottom: 8px;
+    }
+
+    .part-of-speech {
+      font-size: 14px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+
+    .definition {
+      font-size: 24px;
+      color: var(--text);
+      line-height: 1.5;
+      max-width: 500px;
+      margin: 0 auto 32px;
+    }
+
+    .example {
+      font-size: 16px;
+      color: var(--text-muted);
+      font-style: italic;
+      line-height: 1.6;
+      max-width: 450px;
+      margin: 0 auto 40px;
+      padding: 20px;
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 40px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .actions {
+      margin-top: 32px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .audio-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      margin-left: 12px;
+      vertical-align: middle;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .level-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: var(--accent-light);
+      color: var(--accent);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 20px;
+    }
+
+    .hint {
+      margin-top: 24px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .hint strong {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <p class="date" id="date"></p>
+    
+    <h1 class="word" id="word">Loading...</h1>
+    <p class="pronunciation" id="pronunciation"></p>
+    <p class="part-of-speech" id="partOfSpeech"></p>
+    
+    <p class="definition" id="definition"></p>
+    
+    <div class="example" id="example"></div>
+    
+    <div class="actions">
+      <button class="btn btn-secondary" id="audioBtn">🔊 Listen</button>
+    </div>
+    
+    <p class="hint">Click the <strong>W.</strong> icon in your toolbar to practice this word</p>
+    
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-value" id="wordsLearned">0</span>
+        <span class="stat-label">Words Learned</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="streak">0</span>
+        <span class="stat-label">Day Streak</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="level">1</span>
+        <span class="stat-label">Level</span>
+      </div>
+    </div>
+    
+    <span class="level-badge" id="levelName">Novice</span>
+  </div>
+  
+  <p class="footer">Word of the Day • Click the extension icon to practice</p>
+  
+  <script src="vocabulary.js"></script>
+  <script>
+    const LEVELS = [
+      { level: 1, name: 'Novice', minXP: 0 },
+      { level: 2, name: 'Apprentice', minXP: 100 },
+      { level: 3, name: 'Student', minXP: 300 },
+      { level: 4, name: 'Scholar', minXP: 600 },
+      { level: 5, name: 'Expert', minXP: 1000 },
+      { level: 6, name: 'Master', minXP: 1500 },
+      { level: 7, name: 'Wordsmith', minXP: 2500 },
+      { level: 8, name: 'Lexicon Sage', minXP: 4000 },
+      { level: 9, name: 'Vocabulary Virtuoso', minXP: 6000 },
+      { level: 10, name: 'Word Wizard', minXP: 10000 }
+    ];
+
+    function getCurrentLevel(xp) {
+      return LEVELS.slice().reverse().find(l => xp >= l.minXP) || LEVELS[0];
+    }
+
+    function generatePronunciation(word) {
+      return '/' + word.toLowerCase().split('').join('·') + '/';
+    }
+
+    async function init() {
+      // Set date
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('date').textContent = new Date().toLocaleDateString('en-US', options);
+      
+      // Get today's word
+      const today = new Date().toISOString().split('T')[0];
+      const seed = today.split('-').reduce((a, b) => a + parseInt(b), 0);
+      const wordIndex = seed % VOCABULARY.length;
+      const word = VOCABULARY[wordIndex];
+      
+      // Display word
+      document.getElementById('word').textContent = word.word;
+      document.getElementById('pronunciation').textContent = generatePronunciation(word.word);
+      document.getElementById('partOfSpeech').textContent = word.partOfSpeech;
+      document.getElementById('definition').textContent = word.definition;
+      document.getElementById('example').textContent = '"' + word.example + '"';
+      
+      // Load stats
+      const data = await chrome.storage.local.get(['stats']);
+      const stats = data.stats || { wordsLearned: 0, currentStreak: 0, xp: 0 };
+      
+      document.getElementById('wordsLearned').textContent = stats.wordsLearned || 0;
+      document.getElementById('streak').textContent = stats.currentStreak || 0;
+      
+      const level = getCurrentLevel(stats.xp || 0);
+      document.getElementById('level').textContent = level.level;
+      document.getElementById('levelName').textContent = level.name;
+      
+      // Audio button
+      document.getElementById('audioBtn').addEventListener('click', () => {
+        const utterance = new SpeechSynthesisUtterance(word.word);
+        utterance.rate = 0.8;
+        speechSynthesis.speak(utterance);
+      });
+    }
+    
+    init();
+  </script>
+</body>
+</html>
+

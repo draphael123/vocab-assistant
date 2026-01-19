@@ -23,11 +23,73 @@ let stats = {
   wordMastery: {}, // { "word": { level: 1-5, lastSeen: date, correctCount: n } }
   personalNotes: {}, // { "word": "note text" }
   wordHistory: [], // [{ word, date, action }]
-  streakFreezeUsed: null, // date string when last used
-  streakFreezeWeek: null // week number
+  streakFreezeUsed: null,
+  streakFreezeWeek: null,
+  // v3.0 New Features
+  pronunciationSpeed: 0.8, // 0.5, 0.75, 1.0
+  collections: { favorites: [] }, // Named collections
+  dailyGoal: 1, // 1, 2, or 3 words per day
+  todayWordsLearned: 0,
+  lastGoalDate: null,
+  xp: 0,
+  level: 1,
+  achievements: [], // Unlocked achievement IDs
+  dailyChallengeCompleted: null, // Date string
+  customWords: [], // User-imported words
+  quizHistory: [], // { date, score, total }
+  missedDays: 0 // For streak recovery
 };
 let quizState = { questions: [], current: 0, score: 0 };
 let challengeState = { mode: null, questions: [], current: 0, score: 0, startTime: null, timer: null };
+
+// Achievement definitions
+const ACHIEVEMENTS = [
+  { id: 'first_word', name: 'First Steps', icon: '🌱', desc: 'Learn your first word', xp: 10 },
+  { id: 'streak_7', name: 'On Fire', icon: '🔥', desc: '7 day streak', xp: 50 },
+  { id: 'streak_30', name: 'Unstoppable', icon: '💪', desc: '30 day streak', xp: 200 },
+  { id: 'streak_100', name: 'Legendary', icon: '👑', desc: '100 day streak', xp: 500 },
+  { id: 'words_10', name: 'Getting Started', icon: '📖', desc: 'Learn 10 words', xp: 25 },
+  { id: 'words_50', name: 'Word Collector', icon: '📚', desc: 'Learn 50 words', xp: 100 },
+  { id: 'words_100', name: 'Scholar', icon: '🎓', desc: 'Learn 100 words', xp: 250 },
+  { id: 'words_200', name: 'Lexicon Master', icon: '🏆', desc: 'Learn 200 words', xp: 500 },
+  { id: 'early_bird', name: 'Early Bird', icon: '🌅', desc: 'Learn before 8 AM', xp: 30 },
+  { id: 'night_owl', name: 'Night Owl', icon: '🦉', desc: 'Learn after 10 PM', xp: 30 },
+  { id: 'perfect_quiz', name: 'Perfect Score', icon: '💯', desc: 'Get 100% on a quiz', xp: 50 },
+  { id: 'quiz_streak_5', name: 'Quiz Master', icon: '🎯', desc: '5 perfect quizzes in a row', xp: 150 },
+  { id: 'speed_demon', name: 'Speed Demon', icon: '⚡', desc: 'Perfect speed challenge', xp: 75 },
+  { id: 'all_categories', name: 'Renaissance', icon: '🎨', desc: 'Learn from all 8 categories', xp: 100 },
+  { id: 'mastery_5', name: 'Word Master', icon: '⭐', desc: 'Master 5 words (5 stars)', xp: 75 },
+  { id: 'mastery_20', name: 'Vocabulary Sage', icon: '🔮', desc: 'Master 20 words', xp: 200 },
+  { id: 'recovery', name: 'Comeback Kid', icon: '🔄', desc: 'Recover a broken streak', xp: 40 },
+  { id: 'goal_week', name: 'Goal Getter', icon: '🎯', desc: 'Hit daily goal for 7 days', xp: 100 },
+  { id: 'challenge_all', name: 'Challenger', icon: '🏅', desc: 'Complete all 3 challenge types', xp: 75 },
+  { id: 'notes_10', name: 'Note Taker', icon: '📝', desc: 'Add notes to 10 words', xp: 50 }
+];
+
+// XP Level thresholds
+const LEVELS = [
+  { level: 1, name: 'Novice', minXP: 0 },
+  { level: 2, name: 'Apprentice', minXP: 100 },
+  { level: 3, name: 'Student', minXP: 300 },
+  { level: 4, name: 'Scholar', minXP: 600 },
+  { level: 5, name: 'Expert', minXP: 1000 },
+  { level: 6, name: 'Master', minXP: 1500 },
+  { level: 7, name: 'Wordsmith', minXP: 2500 },
+  { level: 8, name: 'Lexicon Sage', minXP: 4000 },
+  { level: 9, name: 'Vocabulary Virtuoso', minXP: 6000 },
+  { level: 10, name: 'Word Wizard', minXP: 10000 }
+];
+
+// Daily challenges
+const DAILY_CHALLENGES = [
+  { id: 'learn_2', desc: 'Learn 2 words today', check: (s) => s.todayWordsLearned >= 2, xp: 20 },
+  { id: 'perfect_quiz', desc: 'Get a perfect quiz score', check: (s, extra) => extra?.perfectQuiz, xp: 30 },
+  { id: 'new_category', desc: 'Learn a word from a new category', check: (s, extra) => extra?.newCategory, xp: 25 },
+  { id: 'use_hint', desc: 'Use the hint feature', check: (s, extra) => extra?.usedHint, xp: 10 },
+  { id: 'add_note', desc: 'Add a personal note to a word', check: (s, extra) => extra?.addedNote, xp: 15 },
+  { id: 'speed_challenge', desc: 'Complete a speed challenge', check: (s, extra) => extra?.speedChallenge, xp: 25 },
+  { id: 'review_old', desc: 'Review a word from last week', check: (s, extra) => extra?.reviewedOld, xp: 20 }
+];
 
 // Audio context for sounds
 let audioCtx = null;
@@ -49,6 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
   checkStreakFreeze();
+  checkDailyGoal();
   await loadOrSetDailyWord();
   updateUI();
   setupEventListeners();
@@ -56,6 +119,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   checkSpacedRepetition();
   generateCategoryToggles();
   updateSoundIcon();
+  updateLevelDisplay();
+  updateGoalDisplay();
+  updateDailyChallengeDisplay();
+  checkAchievements();
 });
 
 // ============================================
@@ -130,6 +197,580 @@ function updateSoundIcon() {
   
   const toggle = document.getElementById('soundEffectsToggle');
   if (toggle) toggle.classList.toggle('active', stats.soundEnabled);
+}
+
+// ============================================
+// XP & Leveling System
+// ============================================
+
+function addXP(amount, reason) {
+  stats.xp += amount;
+  checkLevelUp();
+  saveStats();
+  
+  // Show XP popup
+  showXPGain(amount, reason);
+}
+
+function checkLevelUp() {
+  const newLevel = LEVELS.slice().reverse().find(l => stats.xp >= l.minXP);
+  if (newLevel && newLevel.level > stats.level) {
+    stats.level = newLevel.level;
+    showLevelUp(newLevel);
+    playSound('milestone');
+    launchConfetti();
+  }
+}
+
+function showXPGain(amount, reason) {
+  const popup = document.createElement('div');
+  popup.className = 'xp-popup';
+  popup.innerHTML = `+${amount} XP <small>${reason || ''}</small>`;
+  document.body.appendChild(popup);
+  
+  setTimeout(() => popup.classList.add('show'), 10);
+  setTimeout(() => {
+    popup.classList.remove('show');
+    setTimeout(() => popup.remove(), 300);
+  }, 2000);
+}
+
+function showLevelUp(level) {
+  showMilestone(`🎉 Level ${level.level}: ${level.name}!`);
+}
+
+function getLevelProgress() {
+  const current = LEVELS.slice().reverse().find(l => stats.xp >= l.minXP);
+  const next = LEVELS.find(l => l.level === current.level + 1);
+  if (!next) return 100;
+  
+  const progress = ((stats.xp - current.minXP) / (next.minXP - current.minXP)) * 100;
+  return Math.min(100, progress);
+}
+
+function getCurrentLevel() {
+  return LEVELS.slice().reverse().find(l => stats.xp >= l.minXP) || LEVELS[0];
+}
+
+// ============================================
+// Achievement System
+// ============================================
+
+function checkAchievements(context = {}) {
+  const newAchievements = [];
+  
+  ACHIEVEMENTS.forEach(achievement => {
+    if (stats.achievements.includes(achievement.id)) return;
+    
+    let earned = false;
+    
+    switch(achievement.id) {
+      case 'first_word': earned = stats.wordsLearned >= 1; break;
+      case 'streak_7': earned = stats.currentStreak >= 7; break;
+      case 'streak_30': earned = stats.currentStreak >= 30; break;
+      case 'streak_100': earned = stats.currentStreak >= 100; break;
+      case 'words_10': earned = stats.wordsLearned >= 10; break;
+      case 'words_50': earned = stats.wordsLearned >= 50; break;
+      case 'words_100': earned = stats.wordsLearned >= 100; break;
+      case 'words_200': earned = stats.wordsLearned >= 200; break;
+      case 'early_bird': earned = context.earlyBird; break;
+      case 'night_owl': earned = context.nightOwl; break;
+      case 'perfect_quiz': earned = context.perfectQuiz; break;
+      case 'quiz_streak_5': earned = context.quizStreak >= 5; break;
+      case 'speed_demon': earned = context.perfectSpeed; break;
+      case 'all_categories':
+        const learnedCats = new Set(stats.learnedWords.map(w => {
+          const word = VOCABULARY.find(v => v.word.toLowerCase() === w);
+          return word?.category;
+        }).filter(c => c));
+        earned = learnedCats.size >= 8;
+        break;
+      case 'mastery_5':
+        const mastered5 = Object.values(stats.wordMastery).filter(m => m.level >= 5).length;
+        earned = mastered5 >= 5;
+        break;
+      case 'mastery_20':
+        const mastered20 = Object.values(stats.wordMastery).filter(m => m.level >= 5).length;
+        earned = mastered20 >= 20;
+        break;
+      case 'recovery': earned = context.streakRecovered; break;
+      case 'goal_week': earned = context.goalWeek; break;
+      case 'challenge_all': earned = context.allChallenges; break;
+      case 'notes_10':
+        earned = Object.keys(stats.personalNotes).length >= 10;
+        break;
+    }
+    
+    if (earned) {
+      stats.achievements.push(achievement.id);
+      newAchievements.push(achievement);
+      addXP(achievement.xp, achievement.name);
+    }
+  });
+  
+  if (newAchievements.length > 0) {
+    showAchievementUnlock(newAchievements[0]);
+    saveStats();
+  }
+}
+
+function showAchievementUnlock(achievement) {
+  const modal = document.createElement('div');
+  modal.className = 'achievement-modal';
+  modal.innerHTML = `
+    <div class="achievement-content">
+      <div class="achievement-icon">${achievement.icon}</div>
+      <div class="achievement-title">Achievement Unlocked!</div>
+      <div class="achievement-name">${achievement.name}</div>
+      <div class="achievement-desc">${achievement.desc}</div>
+      <div class="achievement-xp">+${achievement.xp} XP</div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  playSound('milestone');
+  setTimeout(() => modal.classList.add('show'), 10);
+  setTimeout(() => {
+    modal.classList.remove('show');
+    setTimeout(() => modal.remove(), 300);
+  }, 3000);
+}
+
+// ============================================
+// Streak Recovery System
+// ============================================
+
+function checkStreakRecovery() {
+  const today = getTodayString();
+  const yesterday = getYesterdayString();
+  
+  // If they missed yesterday and have missed days to recover
+  if (stats.lastPracticeDate && stats.lastPracticeDate !== today && stats.lastPracticeDate !== yesterday) {
+    // Calculate missed days
+    const lastDate = new Date(stats.lastPracticeDate);
+    const todayDate = new Date(today);
+    const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 1 && stats.currentStreak > 0) {
+      stats.missedDays = diffDays - 1;
+      return true;
+    }
+  }
+  return false;
+}
+
+function attemptStreakRecovery() {
+  if (stats.missedDays > 0 && stats.todayWordsLearned >= 2) {
+    stats.missedDays--;
+    if (stats.missedDays === 0) {
+      // Streak recovered!
+      checkAchievements({ streakRecovered: true });
+      showMilestone('🔄 Streak Recovered!');
+    }
+    saveStats();
+    return true;
+  }
+  return false;
+}
+
+function getYesterdayString() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split('T')[0];
+}
+
+// ============================================
+// Daily Goal System
+// ============================================
+
+function checkDailyGoal() {
+  const today = getTodayString();
+  
+  // Reset daily counter if new day
+  if (stats.lastGoalDate !== today) {
+    stats.todayWordsLearned = 0;
+    stats.lastGoalDate = today;
+  }
+}
+
+function incrementDailyProgress() {
+  checkDailyGoal();
+  stats.todayWordsLearned++;
+  
+  if (stats.todayWordsLearned >= stats.dailyGoal) {
+    showMilestone(`🎯 Daily goal reached! (${stats.dailyGoal}/${stats.dailyGoal})`);
+    addXP(15, 'Daily Goal');
+  }
+  
+  // Check for streak recovery
+  attemptStreakRecovery();
+  
+  saveStats();
+  updateGoalDisplay();
+}
+
+function updateGoalDisplay() {
+  const goalEl = document.getElementById('goalProgress');
+  if (goalEl) {
+    goalEl.textContent = `${Math.min(stats.todayWordsLearned, stats.dailyGoal)}/${stats.dailyGoal}`;
+  }
+  
+  const goalBar = document.getElementById('goalBar');
+  if (goalBar) {
+    const percent = Math.min(100, (stats.todayWordsLearned / stats.dailyGoal) * 100);
+    goalBar.style.width = `${percent}%`;
+  }
+}
+
+// ============================================
+// Daily Challenges
+// ============================================
+
+function getDailyChallenge() {
+  const today = getTodayString();
+  // Use date as seed for consistent daily challenge
+  const seed = today.split('-').reduce((a, b) => a + parseInt(b), 0);
+  return DAILY_CHALLENGES[seed % DAILY_CHALLENGES.length];
+}
+
+function checkDailyChallenge(context = {}) {
+  const today = getTodayString();
+  if (stats.dailyChallengeCompleted === today) return;
+  
+  const challenge = getDailyChallenge();
+  if (challenge.check(stats, context)) {
+    stats.dailyChallengeCompleted = today;
+    addXP(challenge.xp, 'Daily Challenge');
+    showMilestone(`✅ Challenge Complete: ${challenge.desc}`);
+    saveStats();
+  }
+}
+
+// ============================================
+// Pronunciation Speed Control
+// ============================================
+
+function speakWord() {
+  if (!currentWord) return;
+  
+  playSound('click');
+  
+  const utterance = new SpeechSynthesisUtterance(currentWord.word);
+  utterance.rate = stats.pronunciationSpeed || 0.8;
+  utterance.pitch = 1;
+  
+  const voices = speechSynthesis.getVoices();
+  const englishVoice = voices.find(v => v.lang.startsWith('en-'));
+  if (englishVoice) utterance.voice = englishVoice;
+  
+  speechSynthesis.speak(utterance);
+}
+
+function setPronunciationSpeed(speed) {
+  stats.pronunciationSpeed = speed;
+  saveStats();
+  
+  document.querySelectorAll('[data-speed]').forEach(btn => {
+    btn.classList.toggle('active', parseFloat(btn.dataset.speed) === speed);
+  });
+}
+
+// ============================================
+// Collections (Named Favorites)
+// ============================================
+
+function getCollections() {
+  return stats.collections || { favorites: [] };
+}
+
+function createCollection(name) {
+  if (!stats.collections) stats.collections = { favorites: [] };
+  if (!stats.collections[name]) {
+    stats.collections[name] = [];
+    saveStats();
+    return true;
+  }
+  return false;
+}
+
+function addToCollection(collectionName, word) {
+  if (!stats.collections[collectionName]) return false;
+  if (!stats.collections[collectionName].includes(word.toLowerCase())) {
+    stats.collections[collectionName].push(word.toLowerCase());
+    saveStats();
+    return true;
+  }
+  return false;
+}
+
+function removeFromCollection(collectionName, word) {
+  if (!stats.collections[collectionName]) return false;
+  const index = stats.collections[collectionName].indexOf(word.toLowerCase());
+  if (index > -1) {
+    stats.collections[collectionName].splice(index, 1);
+    saveStats();
+    return true;
+  }
+  return false;
+}
+
+function deleteCollection(name) {
+  if (name === 'favorites') return false; // Can't delete default
+  if (stats.collections[name]) {
+    delete stats.collections[name];
+    saveStats();
+    return true;
+  }
+  return false;
+}
+
+// ============================================
+// Smart Word Selection
+// ============================================
+
+function getSmartWord() {
+  // Priority: Due for review > Struggling words > Random new
+  
+  // Check spaced repetition due words
+  const today = getTodayString();
+  const dueWords = stats.spacedRepetition.filter(item => item.nextReview <= today);
+  if (dueWords.length > 0) {
+    const dueWord = dueWords[0].word;
+    const found = VOCABULARY.find(w => w.word.toLowerCase() === dueWord);
+    if (found) return { word: found, reason: 'Review due' };
+  }
+  
+  // Check struggling words (low mastery, seen multiple times)
+  const strugglingWords = Object.entries(stats.wordMastery)
+    .filter(([word, data]) => data.level < 3 && data.correctCount > 0)
+    .sort((a, b) => a[1].level - b[1].level);
+  
+  if (strugglingWords.length > 0 && Math.random() < 0.3) {
+    const word = strugglingWords[0][0];
+    const found = VOCABULARY.find(w => w.word.toLowerCase() === word);
+    if (found) return { word: found, reason: 'Needs practice' };
+  }
+  
+  // Default: Random new word
+  return { word: null, reason: 'New word' };
+}
+
+// ============================================
+// Import/Export Custom Words & Data
+// ============================================
+
+function exportAllData() {
+  const data = {
+    version: '3.0',
+    exportDate: new Date().toISOString(),
+    stats: stats,
+    customWords: stats.customWords || []
+  };
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `word-of-the-day-backup-${getTodayString()}.json`;
+  a.click();
+  
+  URL.revokeObjectURL(url);
+  playSound('success');
+  showFeedback('Data exported!', 'success');
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      
+      if (data.stats) {
+        // Merge imported stats with current
+        stats = { ...stats, ...data.stats };
+        await saveStats();
+        showFeedback('Data imported successfully!', 'success');
+        updateUI();
+      }
+      
+      if (data.customWords && data.customWords.length > 0) {
+        stats.customWords = [...(stats.customWords || []), ...data.customWords];
+        await saveStats();
+        showFeedback(`${data.customWords.length} custom words imported!`, 'success');
+      }
+    } catch (err) {
+      showFeedback('Invalid file format', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function importCustomWords(csvText) {
+  // Expected format: word,partOfSpeech,definition,example
+  const lines = csvText.trim().split('\n');
+  const words = [];
+  
+  lines.forEach((line, i) => {
+    if (i === 0 && line.toLowerCase().includes('word')) return; // Skip header
+    
+    const parts = line.split(',').map(p => p.trim().replace(/^"|"$/g, ''));
+    if (parts.length >= 3) {
+      words.push({
+        word: parts[0],
+        partOfSpeech: parts[1] || 'noun',
+        definition: parts[2],
+        example: parts[3] || `The word ${parts[0]} is useful.`,
+        examples: [parts[3] || `The word ${parts[0]} is useful.`],
+        etymology: 'Custom word',
+        synonyms: [],
+        antonyms: [],
+        difficulty: 2,
+        category: 'custom',
+        isCustom: true
+      });
+    }
+  });
+  
+  if (words.length > 0) {
+    stats.customWords = [...(stats.customWords || []), ...words];
+    saveStats();
+    showFeedback(`${words.length} custom words added!`, 'success');
+  }
+  
+  return words;
+}
+
+// ============================================
+// Analytics
+// ============================================
+
+function getAnalytics() {
+  // Words by category
+  const categoryCount = {};
+  stats.learnedWords.forEach(word => {
+    const found = VOCABULARY.find(w => w.word.toLowerCase() === word);
+    const cat = found?.category || 'unknown';
+    categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+  });
+  
+  // Words by difficulty
+  const difficultyCount = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  stats.learnedWords.forEach(word => {
+    const found = VOCABULARY.find(w => w.word.toLowerCase() === word);
+    const diff = found?.difficulty || 2;
+    difficultyCount[diff]++;
+  });
+  
+  // Quiz performance
+  const quizAvg = stats.quizHistory?.length > 0 
+    ? stats.quizHistory.reduce((a, q) => a + (q.score / q.total), 0) / stats.quizHistory.length * 100
+    : 0;
+  
+  // Most difficult words (lowest mastery with attempts)
+  const difficult = Object.entries(stats.wordMastery)
+    .filter(([_, data]) => data.correctCount > 0 && data.level < 3)
+    .sort((a, b) => a[1].level - b[1].level)
+    .slice(0, 5)
+    .map(([word]) => word);
+  
+  // Learning velocity (words per week)
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekAgoStr = weekAgo.toISOString().split('T')[0];
+  const thisWeekWords = Object.entries(stats.learningHistory)
+    .filter(([date]) => date >= weekAgoStr)
+    .reduce((sum, [_, words]) => sum + words.length, 0);
+  
+  return {
+    totalWords: stats.wordsLearned,
+    categoryCount,
+    difficultyCount,
+    quizAverage: Math.round(quizAvg),
+    difficultWords: difficult,
+    weeklyVelocity: thisWeekWords,
+    totalXP: stats.xp,
+    level: getCurrentLevel(),
+    achievementsUnlocked: stats.achievements.length,
+    totalAchievements: ACHIEVEMENTS.length
+  };
+}
+
+// ============================================
+// Word Relationships
+// ============================================
+
+function getRelatedWords(word) {
+  const related = [];
+  const wordData = VOCABULARY.find(w => w.word.toLowerCase() === word.toLowerCase());
+  if (!wordData) return related;
+  
+  // Find words with matching synonyms/antonyms
+  VOCABULARY.forEach(w => {
+    if (w.word.toLowerCase() === word.toLowerCase()) return;
+    
+    const isSynonym = wordData.synonyms?.some(s => 
+      w.word.toLowerCase() === s.toLowerCase() ||
+      w.synonyms?.includes(s)
+    );
+    
+    const isAntonym = wordData.antonyms?.some(a => 
+      w.word.toLowerCase() === a.toLowerCase() ||
+      w.antonyms?.includes(a)
+    );
+    
+    const sameCategory = w.category === wordData.category;
+    
+    if (isSynonym) related.push({ word: w.word, relation: 'synonym' });
+    else if (isAntonym) related.push({ word: w.word, relation: 'antonym' });
+    else if (sameCategory && related.length < 6) related.push({ word: w.word, relation: 'category' });
+  });
+  
+  return related.slice(0, 8);
+}
+
+// ============================================
+// Did You Know Facts
+// ============================================
+
+function getWordFact(word) {
+  const facts = [];
+  const wordData = VOCABULARY.find(w => w.word.toLowerCase() === word.toLowerCase());
+  if (!wordData) return null;
+  
+  // Add interesting facts based on word properties
+  if (wordData.etymology?.includes('Greek')) {
+    facts.push('📜 This word has Greek origins');
+  } else if (wordData.etymology?.includes('Latin')) {
+    facts.push('📜 This word has Latin origins');
+  }
+  
+  if (wordData.difficulty === 3) {
+    facts.push('📚 This is a GRE-level word');
+  } else if (wordData.difficulty === 4) {
+    facts.push('🎭 This is a rare/obscure word');
+  }
+  
+  if (wordData.word.length > 10) {
+    facts.push(`📏 ${wordData.word.length} letters long`);
+  }
+  
+  // Category-specific facts
+  const categoryFacts = {
+    literature: '📖 Often found in literary works',
+    philosophy: '💭 A philosophical term',
+    science: '🔬 Used in scientific contexts',
+    law: '⚖️ Common in legal documents',
+    medicine: '🏥 Medical terminology',
+    business: '💼 Business jargon',
+    arts: '🎨 Arts and culture term'
+  };
+  
+  if (categoryFacts[wordData.category]) {
+    facts.push(categoryFacts[wordData.category]);
+  }
+  
+  return facts.length > 0 ? facts[Math.floor(Math.random() * facts.length)] : null;
 }
 
 // ============================================
@@ -566,6 +1207,10 @@ function saveNote() {
   if (note) {
     stats.personalNotes[key] = note;
     document.getElementById('notesIndicator').classList.remove('hidden');
+    
+    // Check daily challenge and achievements
+    checkDailyChallenge({ addedNote: true });
+    checkAchievements();
   } else {
     delete stats.personalNotes[key];
     document.getElementById('notesIndicator').classList.add('hidden');
@@ -765,6 +1410,32 @@ function endChallenge() {
   document.getElementById('challengeMessage').textContent = 
     messages[Math.min(3, Math.floor(percent * 4))];
   
+  // Add XP for challenge
+  addXP(challengeState.score * 4, 'Challenge');
+  
+  // Track completed challenge types
+  if (!stats.completedChallenges) stats.completedChallenges = [];
+  if (!stats.completedChallenges.includes(challengeState.mode)) {
+    stats.completedChallenges.push(challengeState.mode);
+  }
+  
+  // Check achievements
+  const isPerfect = percent === 1;
+  const isPerfectSpeed = isPerfect && challengeState.mode === 'speed';
+  const allChallenges = stats.completedChallenges.length >= 3;
+  
+  checkAchievements({
+    perfectSpeed: isPerfectSpeed,
+    allChallenges: allChallenges
+  });
+  
+  // Check daily challenge
+  if (challengeState.mode === 'speed') {
+    checkDailyChallenge({ speedChallenge: true });
+  }
+  
+  saveStats();
+  
   if (percent >= 0.8) {
     playSound('milestone');
     launchConfetti();
@@ -898,6 +1569,13 @@ function escapeRegex(string) {
 async function handleSuccess() {
   const today = getTodayString();
   const wordLower = currentWord.word.toLowerCase();
+  const hour = new Date().getHours();
+  
+  // Check for time-based achievements
+  const achievementContext = {
+    earlyBird: hour < 8,
+    nightOwl: hour >= 22
+  };
   
   if (!stats.learnedWords.includes(wordLower)) {
     stats.learnedWords.push(wordLower);
@@ -914,9 +1592,24 @@ async function handleSuccess() {
     }
     
     checkMilestone(stats.wordsLearned);
+    
+    // Add XP for learning new word
+    addXP(10, 'New word');
+    
+    // Increment daily goal progress
+    incrementDailyProgress();
   }
   
+  // Add XP for using word in sentence
+  addXP(5, 'Sentence');
+  
   updateMastery(currentWord.word, true);
+  
+  // Check achievements
+  checkAchievements(achievementContext);
+  
+  // Check daily challenge
+  checkDailyChallenge();
   
   // Update streak
   if (stats.lastPracticeDate !== today) {
@@ -945,6 +1638,9 @@ async function handleSuccess() {
     
     stats.lastPracticeDate = today;
   }
+  
+  // Update level display
+  updateLevelDisplay();
   
   await saveStats();
   updateStats();
@@ -1192,10 +1888,35 @@ function showQuizResult() {
   const messages = ['Keep practicing! 📚', 'Good effort! 💪', 'Great job! 👏', 'Perfect! 🎯'];
   document.getElementById('quizMessage').textContent = messages[Math.min(3, Math.floor(percent * 4))];
   
-  if (percent === 1) {
+  // Track quiz history
+  if (!stats.quizHistory) stats.quizHistory = [];
+  stats.quizHistory.push({
+    date: getTodayString(),
+    score: quizState.score,
+    total: quizState.questions.length
+  });
+  
+  // Add XP for quiz
+  addXP(quizState.score * 3, 'Quiz');
+  
+  // Check for perfect quiz
+  const isPerfect = percent === 1;
+  if (isPerfect) {
     playSound('milestone');
     launchConfetti();
+    
+    // Count consecutive perfect quizzes
+    const recentPerfect = stats.quizHistory.slice(-5).filter(q => q.score === q.total).length;
+    
+    checkAchievements({ 
+      perfectQuiz: true,
+      quizStreak: recentPerfect
+    });
+    
+    checkDailyChallenge({ perfectQuiz: true });
   }
+  
+  saveStats();
 }
 
 function showWordBank(filter = 'all', category = null) {
@@ -1361,9 +2082,19 @@ function renderCalendar() {
 function showSettings() {
   showView('settings');
   
+  // Update daily goal buttons
+  document.querySelectorAll('.goal-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.goal) === stats.dailyGoal);
+  });
+  
   // Update difficulty buttons
   document.querySelectorAll('[data-difficulty]').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.difficulty) === stats.difficulty);
+  });
+  
+  // Update pronunciation speed buttons
+  document.querySelectorAll('.speed-btn').forEach(btn => {
+    btn.classList.toggle('active', parseFloat(btn.dataset.speed) === stats.pronunciationSpeed);
   });
   
   // Update theme buttons
@@ -1380,6 +2111,9 @@ function showSettings() {
   
   // Generate category toggles
   generateCategoryToggles();
+  
+  // Update custom word count
+  updateCustomWordCount();
   
   updateFreezeCount();
 }
@@ -1593,7 +2327,7 @@ function copyTemplate() {
 // ============================================
 
 function showView(view) {
-  const views = ['main', 'history', 'challenge', 'calendar', 'quiz', 'bank', 'settings'];
+  const views = ['main', 'history', 'challenge', 'calendar', 'quiz', 'bank', 'settings', 'achievements', 'analytics'];
   views.forEach(v => {
     const el = document.getElementById(`${v}View`);
     if (el) el.classList.toggle('hidden', v !== view);
@@ -1611,6 +2345,7 @@ function setupEventListeners() {
   // Header
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
   document.getElementById('settingsBtn').addEventListener('click', showSettings);
+  document.getElementById('achievementsBtn')?.addEventListener('click', showAchievements);
   document.getElementById('soundToggle').addEventListener('click', () => {
     stats.soundEnabled = !stats.soundEnabled;
     updateSoundIcon();
@@ -1624,7 +2359,6 @@ function setupEventListeners() {
   // Word actions
   document.getElementById('audioBtn').addEventListener('click', speakWord);
   document.getElementById('skipBtn').addEventListener('click', skipWord);
-  document.getElementById('newWordBtn').addEventListener('click', getNewWord);
   document.getElementById('notesToggle').addEventListener('click', toggleNotes);
   document.getElementById('notesSave').addEventListener('click', saveNote);
   
@@ -1632,7 +2366,10 @@ function setupEventListeners() {
   document.getElementById('checkBtn').addEventListener('click', checkSentence);
   document.getElementById('copyBtn').addEventListener('click', copyTemplate);
   document.getElementById('shareBtn').addEventListener('click', showShareModal);
-  document.getElementById('hintBtn').addEventListener('click', showHint);
+  document.getElementById('hintBtn').addEventListener('click', () => {
+    showHint();
+    checkDailyChallenge({ usedHint: true });
+  });
   document.getElementById('userSentence').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -1645,7 +2382,7 @@ function setupEventListeners() {
   document.getElementById('challengeBtn').addEventListener('click', showChallenge);
   document.getElementById('quizBtn').addEventListener('click', startQuiz);
   document.getElementById('bankBtn').addEventListener('click', () => showWordBank('all'));
-  document.getElementById('calendarBtn').addEventListener('click', showCalendar);
+  document.getElementById('analyticsBtn')?.addEventListener('click', showAnalytics);
   
   // History view
   document.getElementById('historyBackBtn').addEventListener('click', () => showView('main'));
@@ -1666,8 +2403,22 @@ function setupEventListeners() {
     }
   });
   
-  // Calendar view
-  document.getElementById('calendarBackBtn')?.addEventListener('click', () => showView('main'));
+  // Achievements view
+  document.getElementById('achievementsBackBtn')?.addEventListener('click', () => showView('main'));
+  
+  // Analytics view
+  document.getElementById('analyticsBackBtn')?.addEventListener('click', () => showView('main'));
+  document.getElementById('shareProgressBtn')?.addEventListener('click', showProgressCard);
+  
+  // Progress card modal
+  document.getElementById('progressClose')?.addEventListener('click', hideProgressCard);
+  document.getElementById('copyProgressCard')?.addEventListener('click', () => {
+    const text = `📚 My Vocabulary Journey\n${stats.wordsLearned} words • ${stats.currentStreak} day streak • Level ${getCurrentLevel().level}\nwordoftheday.app`;
+    navigator.clipboard.writeText(text);
+    showFeedback('Copied!', 'success');
+    hideProgressCard();
+  });
+  document.getElementById('downloadProgressCard')?.addEventListener('click', downloadProgressCard);
   
   // Quiz view
   document.getElementById('quizBackBtn').addEventListener('click', () => showView('main'));
@@ -1687,6 +2438,27 @@ function setupEventListeners() {
   document.getElementById('notificationToggle').addEventListener('click', toggleNotifications);
   document.getElementById('soundEffectsToggle').addEventListener('click', toggleSoundEffects);
   
+  // Daily goal buttons
+  document.querySelectorAll('.goal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      stats.dailyGoal = parseInt(btn.dataset.goal);
+      saveStats();
+      updateGoalDisplay();
+      document.querySelectorAll('.goal-btn').forEach(b => 
+        b.classList.toggle('active', b.dataset.goal === btn.dataset.goal)
+      );
+      playSound('click');
+    });
+  });
+  
+  // Pronunciation speed buttons
+  document.querySelectorAll('.speed-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setPronunciationSpeed(parseFloat(btn.dataset.speed));
+      playSound('click');
+    });
+  });
+  
   document.querySelectorAll('[data-difficulty]').forEach(btn => {
     btn.addEventListener('click', () => setDifficulty(parseInt(btn.dataset.difficulty)));
   });
@@ -1699,10 +2471,35 @@ function setupEventListeners() {
     });
   });
   
+  // Data export/import
+  document.getElementById('exportDataBtn')?.addEventListener('click', exportAllData);
+  document.getElementById('importDataInput')?.addEventListener('change', (e) => {
+    if (e.target.files[0]) {
+      importData(e.target.files[0]);
+    }
+  });
+  
+  // Custom words import
+  document.getElementById('importWordsInput')?.addEventListener('change', (e) => {
+    if (e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        importCustomWords(ev.target.result);
+        updateCustomWordCount();
+      };
+      reader.readAsText(e.target.files[0]);
+    }
+  });
+  
   // Share modal
   document.getElementById('shareClose').addEventListener('click', hideShareModal);
   document.getElementById('copyShareCard').addEventListener('click', copyShareCard);
   document.getElementById('downloadShareCard').addEventListener('click', downloadShareCard);
+}
+
+function updateCustomWordCount() {
+  const el = document.getElementById('customWordCount');
+  if (el) el.textContent = stats.customWords?.length || 0;
 }
 
 function setupKeyboardShortcuts() {
@@ -1724,6 +2521,372 @@ function setupKeyboardShortcuts() {
         break;
     }
   });
+}
+
+// ============================================
+// Display Updates
+// ============================================
+
+function updateLevelDisplay() {
+  const level = getCurrentLevel();
+  const progress = getLevelProgress();
+  
+  const badge = document.getElementById('levelBadge');
+  if (badge) badge.textContent = `Lv.${level.level}`;
+  
+  const fill = document.getElementById('xpFill');
+  if (fill) fill.style.width = `${progress}%`;
+}
+
+function updateDailyChallengeDisplay() {
+  const challenge = getDailyChallenge();
+  const today = getTodayString();
+  const completed = stats.dailyChallengeCompleted === today;
+  
+  const textEl = document.getElementById('challengeText');
+  const sectionEl = document.getElementById('dailyChallenge');
+  
+  if (textEl) {
+    textEl.textContent = completed ? '✅ Challenge complete!' : challenge.desc;
+  }
+  if (sectionEl) {
+    sectionEl.classList.toggle('completed', completed);
+  }
+}
+
+function updateWordDisplay() {
+  if (!currentWord) return;
+  
+  document.getElementById('currentWord').textContent = currentWord.word;
+  document.getElementById('partOfSpeech').textContent = currentWord.partOfSpeech;
+  document.getElementById('definition').textContent = currentWord.definition;
+  
+  // Badges
+  const diffLabels = { 1: 'Everyday', 2: 'SAT', 3: 'GRE', 4: 'Obscure' };
+  document.getElementById('difficultyBadge').textContent = diffLabels[currentWord.difficulty] || 'SAT';
+  document.getElementById('categoryBadge').textContent = currentWord.category || 'general';
+  
+  // Etymology
+  const etymSection = document.getElementById('etymologySection');
+  if (currentWord.etymology) {
+    etymSection.style.display = 'flex';
+    document.getElementById('etymology').textContent = currentWord.etymology;
+  } else {
+    etymSection.style.display = 'none';
+  }
+  
+  // Pronunciation
+  document.getElementById('pronunciation').textContent = generatePronunciation(currentWord.word);
+  
+  // Examples (multiple)
+  const examplesList = document.getElementById('examplesList');
+  examplesList.innerHTML = '';
+  
+  const examples = currentWord.examples || [currentWord.example];
+  examples.forEach((ex, i) => {
+    const p = document.createElement('p');
+    p.className = 'example-item';
+    p.textContent = ex;
+    if (i > 0) p.classList.add('secondary');
+    examplesList.appendChild(p);
+  });
+  
+  // Synonyms & Antonyms
+  const synonymsEl = document.getElementById('synonyms');
+  const antonymsEl = document.getElementById('antonyms');
+  synonymsEl.innerHTML = '';
+  antonymsEl.innerHTML = '';
+  
+  (currentWord.synonyms || []).slice(0, 3).forEach(syn => {
+    const span = document.createElement('span');
+    span.textContent = syn;
+    synonymsEl.appendChild(span);
+  });
+  
+  (currentWord.antonyms || []).slice(0, 3).forEach(ant => {
+    const span = document.createElement('span');
+    span.textContent = ant;
+    antonymsEl.appendChild(span);
+  });
+  
+  // Did You Know fact
+  const factSection = document.getElementById('factSection');
+  const factText = document.getElementById('factText');
+  const fact = getWordFact(currentWord.word);
+  if (fact && factSection && factText) {
+    factSection.classList.remove('hidden');
+    factText.textContent = fact;
+  } else if (factSection) {
+    factSection.classList.add('hidden');
+  }
+  
+  // Related words
+  const relatedSection = document.getElementById('relatedSection');
+  const relatedWords = document.getElementById('relatedWords');
+  if (relatedSection && relatedWords) {
+    const related = getRelatedWords(currentWord.word)
+      .filter(r => stats.learnedWords.includes(r.word.toLowerCase()));
+    
+    if (related.length > 0) {
+      relatedSection.classList.remove('hidden');
+      relatedWords.innerHTML = '';
+      related.slice(0, 4).forEach(r => {
+        const span = document.createElement('span');
+        span.className = `related-tag ${r.relation}`;
+        span.textContent = r.word;
+        relatedWords.appendChild(span);
+      });
+    } else {
+      relatedSection.classList.add('hidden');
+    }
+  }
+  
+  updateMasteryDisplay();
+  updateNotesIndicator();
+}
+
+// ============================================
+// Achievements View
+// ============================================
+
+function showAchievements() {
+  showView('achievements');
+  renderAchievements();
+}
+
+function renderAchievements() {
+  const grid = document.getElementById('achievementsGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = '';
+  
+  const level = getCurrentLevel();
+  const nextLevel = LEVELS.find(l => l.level === level.level + 1);
+  
+  // Update header
+  const levelName = document.getElementById('levelName');
+  const totalXP = document.getElementById('totalXP');
+  const xpNext = document.getElementById('xpNext');
+  const xpFillLarge = document.getElementById('xpFillLarge');
+  const achievementsCount = document.getElementById('achievementsCount');
+  
+  if (levelName) levelName.textContent = level.name;
+  if (totalXP) totalXP.textContent = `${stats.xp} XP`;
+  if (xpNext) xpNext.textContent = nextLevel ? `${nextLevel.minXP - stats.xp} XP to ${nextLevel.name}` : 'Max level!';
+  if (xpFillLarge) xpFillLarge.style.width = `${getLevelProgress()}%`;
+  if (achievementsCount) achievementsCount.textContent = `${stats.achievements.length}/${ACHIEVEMENTS.length}`;
+  
+  ACHIEVEMENTS.forEach(achievement => {
+    const unlocked = stats.achievements.includes(achievement.id);
+    
+    const card = document.createElement('div');
+    card.className = `achievement-card ${unlocked ? 'unlocked' : 'locked'}`;
+    card.innerHTML = `
+      <span class="achievement-icon">${achievement.icon}</span>
+      <div class="achievement-info">
+        <span class="achievement-name">${achievement.name}</span>
+        <span class="achievement-desc">${achievement.desc}</span>
+        <span class="achievement-xp">+${achievement.xp} XP</span>
+      </div>
+      ${unlocked ? '<span class="achievement-check">✓</span>' : ''}
+    `;
+    
+    grid.appendChild(card);
+  });
+}
+
+// ============================================
+// Analytics View
+// ============================================
+
+function showAnalytics() {
+  showView('analytics');
+  renderAnalytics();
+}
+
+function renderAnalytics() {
+  const analytics = getAnalytics();
+  
+  // Summary stats
+  const totalWords = document.getElementById('analyticsTotalWords');
+  const weekly = document.getElementById('analyticsWeekly');
+  const quizAvg = document.getElementById('analyticsQuizAvg');
+  
+  if (totalWords) totalWords.textContent = analytics.totalWords;
+  if (weekly) weekly.textContent = analytics.weeklyVelocity;
+  if (quizAvg) quizAvg.textContent = `${analytics.quizAverage}%`;
+  
+  // Category bars
+  const categoryBars = document.getElementById('categoryBars');
+  if (categoryBars) {
+    categoryBars.innerHTML = '';
+    const maxCat = Math.max(...Object.values(analytics.categoryCount), 1);
+    
+    Object.entries(analytics.categoryCount).forEach(([cat, count]) => {
+      const bar = document.createElement('div');
+      bar.className = 'analytics-bar';
+      bar.innerHTML = `
+        <span class="bar-label">${cat}</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: ${(count / maxCat) * 100}%"></div>
+        </div>
+        <span class="bar-value">${count}</span>
+      `;
+      categoryBars.appendChild(bar);
+    });
+  }
+  
+  // Difficulty bars
+  const difficultyBars = document.getElementById('difficultyBars');
+  if (difficultyBars) {
+    difficultyBars.innerHTML = '';
+    const diffLabels = { 1: 'Everyday', 2: 'SAT', 3: 'GRE', 4: 'Obscure' };
+    const maxDiff = Math.max(...Object.values(analytics.difficultyCount), 1);
+    
+    Object.entries(analytics.difficultyCount).forEach(([diff, count]) => {
+      const bar = document.createElement('div');
+      bar.className = 'analytics-bar';
+      bar.innerHTML = `
+        <span class="bar-label">${diffLabels[diff]}</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: ${(count / maxDiff) * 100}%"></div>
+        </div>
+        <span class="bar-value">${count}</span>
+      `;
+      difficultyBars.appendChild(bar);
+    });
+  }
+  
+  // Difficult words
+  const difficultWords = document.getElementById('difficultWords');
+  if (difficultWords) {
+    if (analytics.difficultWords.length > 0) {
+      difficultWords.innerHTML = '';
+      analytics.difficultWords.forEach(word => {
+        const tag = document.createElement('span');
+        tag.className = 'difficult-word-tag';
+        tag.textContent = word;
+        tag.onclick = () => {
+          const found = VOCABULARY.find(w => w.word.toLowerCase() === word.toLowerCase());
+          if (found) {
+            currentWord = found;
+            showView('main');
+            updateWordDisplay();
+          }
+        };
+        difficultWords.appendChild(tag);
+      });
+    } else {
+      difficultWords.innerHTML = '<p class="empty-state">No struggling words yet!</p>';
+    }
+  }
+}
+
+// ============================================
+// Progress Card
+// ============================================
+
+function showProgressCard() {
+  const modal = document.getElementById('progressModal');
+  if (!modal) return;
+  
+  // Update card data
+  const pcWords = document.getElementById('pcWords');
+  const pcStreak = document.getElementById('pcStreak');
+  const pcLevel = document.getElementById('pcLevel');
+  const pcAchievements = document.getElementById('pcAchievements');
+  
+  if (pcWords) pcWords.textContent = stats.wordsLearned;
+  if (pcStreak) pcStreak.textContent = stats.currentStreak;
+  if (pcLevel) pcLevel.textContent = getCurrentLevel().level;
+  
+  if (pcAchievements) {
+    pcAchievements.innerHTML = '';
+    // Show last 3 achievements
+    const recentAchievements = stats.achievements.slice(-3).map(id => 
+      ACHIEVEMENTS.find(a => a.id === id)
+    ).filter(a => a);
+    
+    recentAchievements.forEach(a => {
+      const span = document.createElement('span');
+      span.className = 'pc-achievement';
+      span.textContent = a.icon;
+      span.title = a.name;
+      pcAchievements.appendChild(span);
+    });
+  }
+  
+  modal.classList.remove('hidden');
+  playSound('click');
+}
+
+function hideProgressCard() {
+  const modal = document.getElementById('progressModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function downloadProgressCard() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 300;
+  const ctx = canvas.getContext('2d');
+  
+  // Background
+  ctx.fillStyle = stats.theme === 'dark' ? '#1e1e24' : '#ffffff';
+  ctx.fillRect(0, 0, 400, 300);
+  
+  // Header
+  ctx.fillStyle = '#0ea5e9';
+  ctx.fillRect(0, 0, 400, 6);
+  
+  ctx.fillStyle = stats.theme === 'dark' ? '#f4f4f6' : '#1a1a18';
+  ctx.font = '14px sans-serif';
+  ctx.fillText('My Vocabulary Journey', 24, 40);
+  
+  // Stats
+  ctx.font = 'bold 36px Georgia';
+  ctx.fillText(stats.wordsLearned.toString(), 40, 100);
+  ctx.fillText(stats.currentStreak.toString(), 160, 100);
+  ctx.fillText(getCurrentLevel().level.toString(), 280, 100);
+  
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = stats.theme === 'dark' ? '#a0a0aa' : '#6b6860';
+  ctx.fillText('Words', 40, 120);
+  ctx.fillText('Streak', 160, 120);
+  ctx.fillText('Level', 280, 120);
+  
+  // Level name
+  ctx.font = '16px sans-serif';
+  ctx.fillStyle = '#0ea5e9';
+  ctx.fillText(getCurrentLevel().name, 24, 170);
+  
+  // XP
+  ctx.fillStyle = stats.theme === 'dark' ? '#a0a0aa' : '#6b6860';
+  ctx.font = '12px sans-serif';
+  ctx.fillText(`${stats.xp} XP`, 24, 190);
+  
+  // Achievements
+  const recentAchievements = stats.achievements.slice(-5).map(id => 
+    ACHIEVEMENTS.find(a => a.id === id)
+  ).filter(a => a);
+  
+  ctx.font = '24px sans-serif';
+  recentAchievements.forEach((a, i) => {
+    ctx.fillText(a.icon, 24 + i * 40, 240);
+  });
+  
+  // Footer
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#a09a92';
+  ctx.fillText('wordoftheday.app', 24, 280);
+  
+  const link = document.createElement('a');
+  link.download = `vocabulary-progress-${getTodayString()}.png`;
+  link.href = canvas.toDataURL();
+  link.click();
+  
+  playSound('success');
+  hideProgressCard();
 }
 
 // Load voices
