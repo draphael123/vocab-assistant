@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word of the Day</title>
+  <link rel="stylesheet" href="popup.css">
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">📚</span>
+        <span class="logo-text">Word of the Day</span>
+      </div>
+      <div class="streak-badge" id="streakBadge">
+        <span class="streak-icon">🔥</span>
+        <span class="streak-count" id="streakCount">0</span>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="word-card">
+        <div class="word-header">
+          <h1 class="word" id="currentWord">Loading...</h1>
+          <span class="part-of-speech" id="partOfSpeech"></span>
+        </div>
+        <p class="definition" id="definition"></p>
+        <div class="example-section">
+          <span class="example-label">Example</span>
+          <p class="example" id="example"></p>
+        </div>
+      </div>
+
+      <div class="practice-section">
+        <label class="practice-label" for="userSentence">
+          <span class="practice-icon">✍️</span>
+          Write a sentence using this word:
+        </label>
+        <textarea 
+          id="userSentence" 
+          class="sentence-input" 
+          placeholder="Type your sentence here..."
+          rows="3"
+        ></textarea>
+        <button class="check-btn" id="checkBtn">
+          <span class="btn-text">Check My Sentence</span>
+          <span class="btn-icon">→</span>
+        </button>
+        <div class="feedback" id="feedback"></div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-value" id="wordsLearned">0</span>
+          <span class="stat-label">Words Learned</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="bestStreak">0</span>
+          <span class="stat-label">Best Streak</span>
+        </div>
+      </div>
+      <button class="new-word-btn" id="newWordBtn">
+        <span>Get New Word</span>
+        <span class="refresh-icon">↻</span>
+      </button>
+    </footer>
+  </div>
+
+  <script src="vocabulary.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
+
