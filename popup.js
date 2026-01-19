@@ -1361,30 +1361,46 @@ function renderCalendar() {
 function showSettings() {
   showView('settings');
   
+  // Update difficulty buttons
   document.querySelectorAll('[data-difficulty]').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.difficulty) === stats.difficulty);
   });
   
+  // Update theme buttons
   document.querySelectorAll('.theme-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.theme === stats.theme);
   });
   
+  // Update toggles
   const notifToggle = document.getElementById('notificationToggle');
-  notifToggle.classList.toggle('active', stats.notificationsEnabled);
+  if (notifToggle) notifToggle.classList.toggle('active', stats.notificationsEnabled);
   
   const soundToggle = document.getElementById('soundEffectsToggle');
-  soundToggle.classList.toggle('active', stats.soundEnabled);
+  if (soundToggle) soundToggle.classList.toggle('active', stats.soundEnabled);
+  
+  // Generate category toggles
+  generateCategoryToggles();
   
   updateFreezeCount();
 }
 
 function generateCategoryToggles() {
   const container = document.getElementById('categoryToggles');
-  if (!container) return;
+  if (!container) {
+    console.log('categoryToggles container not found');
+    return;
+  }
   
   container.innerHTML = '';
   
-  const categories = [...new Set(VOCABULARY.map(w => w.category))].sort();
+  if (typeof VOCABULARY === 'undefined' || !VOCABULARY.length) {
+    console.log('VOCABULARY not available');
+    return;
+  }
+  
+  const categories = [...new Set(VOCABULARY.map(w => w.category).filter(c => c))].sort();
+  console.log('Categories found:', categories);
+  
   categories.forEach(cat => {
     const btn = document.createElement('button');
     btn.className = 'setting-btn cat-toggle';
